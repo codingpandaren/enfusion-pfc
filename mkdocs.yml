@@ -1,0 +1,74 @@
+site_name: Propeller Flight Core
+site_description: Developer documentation for the Propeller Flight Core (PFC) - a lightweight, MP-ready propeller-aircraft flight model for Arma Reforger.
+site_url: https://codingpandaren.github.io/enfusion-pfc/
+docs_dir: docs
+
+# The image-folder guide is a repo note for editors, not a published page.
+exclude_docs: |
+  assets/images/README.md
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: light blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.sections   # render top-level nav groups as labeled sidebar sections
+    - navigation.expand     # expand those sections so every page shows in the side menu
+    - navigation.top        # back-to-top button
+    - navigation.tracking   # update the URL with the active anchor
+    - toc.follow            # keep the right-hand page outline in sync while scrolling
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+
+repo_url: https://github.com/codingpandaren/enfusion-pfc
+repo_name: codingpandaren/enfusion-pfc
+edit_uri: edit/main/docs/
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.keys
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Concepts:
+      - Architecture: architecture.md
+      - Flight Model: flight-model.md
+      - Input & Controls: input-and-controls.md
+      - Networking & MP: networking.md
+  - Building Aircraft:
+      - Prefab Setup: prefab-setup.md
+      - Building a Variant: building-a-variant.md
+  - Reference: reference.md
