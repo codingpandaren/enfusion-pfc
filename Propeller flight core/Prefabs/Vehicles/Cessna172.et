@@ -1,0 +1,330 @@
+Vehicle : "{62F416029692CE40}Prefabs/Vehicles/Core/Wheeled_Base.et" {
+ ID "69A8A34010000001"
+ components {
+  MeshObject "{51DAA09FEFBFC0E7}" {
+   Object "{6725795EB515FB63}Models/Cessna172.xob"
+  }
+  PFC_FlightController "{69A8A34010000010}" {
+   m_fControlRate 3.5
+   m_fPitchControlRate 3
+   m_fYawControlRate 3.5
+   m_fPitchInputScale 1
+  }
+  PFC_FlightModel "{69A8A34010000012}" {
+   m_fMaxThrustPerEngine 5500
+   m_iNumEngines 1
+   m_fFuselageDragArea 0.6
+   m_fAngularDamping 1.2
+   m_aSurfaceDefs {
+    PFC_AeroSurfaceDef "{69A8A34010000020}" {
+     m_sLabel "Wing"
+     m_vPosition 2.75 2 0.5
+     m_vRotation 0 0 0
+     m_bMirror 1
+     m_iControlAxis NONE
+     m_fChord 1.47
+     m_fSpan 5.5
+     m_fLiftSlope 5.7
+     m_fSkinFriction 0.02
+     m_fZeroLiftAoA -2
+     m_fStallAngleHigh 16
+     m_fStallAngleLow -16
+     m_fFlapFraction 0
+     m_fEfficiency 0.8
+     m_fAspectRatioOverride 7.4
+    }
+    PFC_AeroSurfaceDef "{69A8A34010000021}" {
+     m_sLabel "Aileron"
+     m_vPosition 4.5 2 0.2
+     m_vRotation 0 0 0
+     m_bMirror 1
+     m_iControlAxis AILERON
+     m_fChord 0.4
+     m_fSpan 1.8
+     m_fLiftSlope 5.5
+     m_fSkinFriction 0.02
+     m_fZeroLiftAoA 0
+     m_fStallAngleHigh 18
+     m_fStallAngleLow -18
+     m_fFlapFraction 1
+     m_fEfficiency 0.8
+     m_fAspectRatioOverride 0
+    }
+    PFC_AeroSurfaceDef "{69A8A34010000022}" {
+     m_sLabel "Elevator"
+     m_vPosition 0.9 1.5 -3.9
+     m_vRotation 0 0 0
+     m_bMirror 1
+     m_iControlAxis ELEVATOR
+     m_fChord 0.8
+     m_fSpan 1.6
+     m_fLiftSlope 5
+     m_fSkinFriction 0.02
+     m_fZeroLiftAoA 0
+     m_fStallAngleHigh 18
+     m_fStallAngleLow -18
+     m_fFlapFraction 0.5
+     m_fEfficiency 0.8
+     m_fAspectRatioOverride 0
+    }
+    PFC_AeroSurfaceDef "{69A8A34010000023}" {
+     m_sLabel "Rudder"
+     m_vPosition 0 2.2 -4
+     m_vRotation 0 0 90
+     m_bMirror 0
+     m_iControlAxis RUDDER
+     m_fChord 0.9
+     m_fSpan 1.4
+     m_fLiftSlope 5
+     m_fSkinFriction 0.02
+     m_fZeroLiftAoA 0
+     m_fStallAngleHigh 18
+     m_fStallAngleLow -18
+     m_fFlapFraction 0.5
+     m_fEfficiency 0.8
+     m_fAspectRatioOverride 0
+    }
+   }
+  }
+  PFC_NwkMovementComponent "{69A8A34010000011}" {
+  }
+  RigidBody "{51DAA09FECF52BBF}" {
+   Active Active
+   Mass 1100
+   CenterOfMass 0 0.853 0.601
+   ResponseIndex "Vehicle"
+  }
+  SCR_BaseCompartmentManagerComponent "{20FB66C5DCB8DF72}" {
+   DoorInfoList {
+    CompartmentDoorInfo "{69A8A89A25F8A9D4}" {
+     EntryPositionInfo PointInfo "{69A8A89A21820104}" {
+     }
+     ExitPositionInfo PointInfo "{69A8A89A29EE67AC}" {
+     }
+     ExitTeleportPositionInfo PointInfo "{69A8A89A2E60D915}" {
+     }
+    }
+   }
+   CompartmentSlots {
+    PilotCompartmentSlot PilotCompartment {
+     DefaultOccupantName "Pilot"
+     CompartmentUniqueName "Pilot"
+     PassengerPositionInfo EntitySlotInfo "{A1CB25848A3D93A8}" {
+      Offset 0 1.1833 0.447
+     }
+    }
+   }
+  }
+  VehicleWheeledSimulation "{731B26FCA2F19855}" : "{A25CB790B888B786}Prefabs/Vehicles/Core/Components/VehicleWheeledSimulation_Base.ct" {
+   Simulation Wheeled "{4D8B26DEA5F25978}" {
+    Engine Engine Engine {
+     MaxPower 1
+     MaxTorque 1
+     RpmIdle 850
+     RpmRedline 6000
+     RpmMax 7000
+     Output "Clutch"
+    }
+    Clutch Clutch Clutch {
+     Output "Gearbox"
+    }
+    Gearbox Gearbox Gearbox {
+     Forward +{
+     }
+     Reverse 4
+    }
+    Axles {
+     Axle "{4D8B26DF957A8E1C}" {
+      TorqueShare 0
+      HasHandbrake 0
+      Suspension Suspension "{4D8B26DFF8859A7B}" {
+       MaxSteeringAngle 30
+       SpringRate 80
+       CompressionDamper 4000
+       RelaxationDamper 6000
+       MaxTravelUp 0.2
+       MaxTravelDown 0.2
+      }
+      Wheel Wheel "{4D8B26DFFE211745}" {
+       Radius 0.25
+       Mass 15
+       BrakeTorque 150
+      }
+      Tyre Tyre "{69A8A34010000B03}" {
+       Roughness 0.15
+       LongitudinalFriction 0.2
+       LateralFriction 0.8
+       RollingResistance 0.05
+       RollingDrag 0.05
+       Tread 1
+      }
+      WheelPositions {
+       WheelPosition Wheel_L01 {
+        PivotID "front_wheel"
+       }
+       WheelPosition Wheel_R01 {
+        PivotID "front_wheel"
+       }
+      }
+     }
+     Axle "{4D8B26DF8CF2F3D8}" {
+      TorqueShare 1
+      HasHandbrake 0
+      Suspension Suspension "{4D8B26DF2B10AE05}" {
+       SpringRate 120
+       CompressionDamper 5000
+       RelaxationDamper 7000
+       MaxTravelUp 0.2
+       MaxTravelDown 0.2
+      }
+      Wheel Wheel "{4D8B26DF30A4E4D7}" {
+       Radius 0.25
+       Mass 15
+       BrakeTorque 150
+      }
+      Tyre Tyre "{69A8A34010000B13}" {
+       Roughness 0.15
+       LongitudinalFriction 0.2
+       LateralFriction 0.8
+       RollingResistance 0.05
+       RollingDrag 0.05
+       Tread 1
+      }
+      WheelPositions {
+       WheelPosition Wheel_L02 {
+        PivotID "lf_wheel"
+       }
+       WheelPosition Wheel_R02 {
+        PivotID "rt_wheel"
+       }
+      }
+     }
+    }
+    Aerodynamics Aerodynamics "{69A8A34010000B20}" {
+     ReferenceArea 0
+     DragCoefficient 0
+    }
+    Pacejka Pacejka "{69A8A34010000B21}" {
+     Longitudinal PacejkaLongitudinal "{69A8A34010000B22}" {
+      b0 1.65
+      b1 -110
+      b2 1800
+      b3 23.3
+      b4 410
+      b5 0.075
+      b6 0
+      b7 0.055
+      b8 -0.024
+      b9 0.014
+      b10 0.26
+     }
+     Lateral PacejkaLateral "{69A8A34010000B23}" {
+      a0 1.55
+      a1 -55
+      a2 1750
+      a3 1900
+      a4 7.2
+      a5 0.014
+      a6 -0.24
+      a7 1
+      a8 -0.03
+      a9 -0.001
+      a10 -0.15
+      a11 -8.5
+      a12 -0.29
+      a13 17.8
+      a14 -2.4
+     }
+     Aligning PacejkaAligning "{69A8A34010000B24}" {
+      c0 2.2
+      c1 -4.3
+      c2 -4.4
+      c3 -1.9
+      c4 -9.6
+      c5 0.023
+      c6 0
+      c7 0.044
+      c8 -0.58
+      c9 0.18
+      c10 0.043
+      c11 0.048
+      c12 -0.004
+      c13 -0.18
+      c14 0.14
+      c16 -1.029
+      c17 0.27
+      c18 -1.1
+     }
+    }
+    RaycastLayer "VehicleCast"
+   }
+  }
+  BaseVehicleNodeComponent "{20FB66C5B2237133}" {
+   components {
+    SCR_BaseHUDComponent "{37C2676694790BC7}" {
+     InfoDisplays {
+      SCR_InfoDisplay "{50E6E6F81354B90F}" {
+       InfoDisplays {
+        SCR_AnalogGauge "{50E6E9C4280A17FE}" {
+         m_eShow 0
+        }
+        SCR_AnalogGauge "{50E6E9C42E916085}" {
+         m_eShow 0
+        }
+        SCR_AnalogGaugeSmall "{50E6F12BB4D36587}" {
+         m_eShow 0
+        }
+        SCR_GearShiftInfo "{5A76D38943D54CC0}" {
+         m_eShow 0
+        }
+        SCR_LightManagerInfo "{5A76D388B11B0BD0}" {
+         m_eShow 0
+        }
+        SCR_LightManagerInfo "{5A76D3888F5360E3}" {
+         m_eShow 0
+        }
+        SCR_LightManagerInfoMulti "{5C86B47E6A990CAA}" {
+         m_eShow 0
+        }
+        SCR_AnalogGauge "{69A8A34B00000001}" : "{A6154EC770D56FC3}Configs/VehicleHUD/VehicleGauge_AirSpeed.conf" {
+        }
+        SCR_AnalogGauge360 "{69A8A34B00000002}" : "{804134174BC81C08}Configs/VehicleHUD/VehicleGauge_Altitude.conf" {
+        }
+        SCR_AnalogGaugeNonLinear "{69A8A34B00000003}" : "{C911AB54F0CAF8F7}Configs/VehicleHUD/VehicleGauge_AltitudeAGL.conf" {
+        }
+        SCR_AnalogGauge "{69A8A34B00000004}" : "{23F5C4FE46344A4B}Configs/VehicleHUD/VehicleGauge_ClimbRate.conf" {
+        }
+       }
+       m_LayoutPath "{69A8A34B00000200}UI/layouts/HUD/PFC_VehicleHUD.layout"
+       m_sContentWidget "Content"
+       m_aHandlers {
+        SCR_InfoDisplaySlotHandler "{69A8A34B00000010}" {
+         m_bCanUpdate 1
+         m_sSlotName "Slot_Vehicle"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+  CarProcAnimComponent "{A201E6A6F82F2CDA}" {
+   Enabled 1
+   Parameters {
+    ProcAnimParams "{69A8A34020000012}" {
+     ResourceName "{69A8A34020000011}Configs/ProcAnims/PFC_Propeller.pap"
+     BoneNames {
+      "prop"
+     }
+    }
+   }
+  }
+  VehicleAnimationComponent "{50B803EAA459B0AF}" {
+   AnimGraph "{2E7DC909B8C4128F}Assets/Vehicles/Helicopters/UH1H/workspace/UH1A.agr"
+   AnimInstance "{C3179CD2A4CD4061}Assets/Vehicles/Helicopters/UH1H/workspace/UH1A.asi"
+  }
+  NwkCarMovementComponent "{5D6CA5AFEC980F35}" {
+   Enabled 0
+  }
+ }
+}

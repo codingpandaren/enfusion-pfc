@@ -1,0 +1,122 @@
+ProcAnimProjectClass {
+ signals {
+  SignalClass {
+   id 5124
+   name "Propeller Signals"
+   tl -512 -256
+   res "{69A8A34020000010}Configs/ProcAnims/PFC_Propeller.siga"
+   inputsport {
+    1
+   }
+   outputsport {
+    2
+   }
+   inputvalues {
+    0
+   }
+   inputvaluesmin {
+    0
+   }
+   inputvaluesmax {
+    360
+   }
+  }
+ }
+ funcs {
+  RotationMakeClass {
+   id 2001
+   name "PropSpin_1"
+   tl -208 -288
+   iops {
+    IOPConnectionClass "iop:0" {
+     port 0
+     conn {
+      ConnectionsClass connections {
+       id 0
+       links {
+        ConnectionClass "5124:2" {
+         id 5124
+         port 2
+        }
+       }
+      }
+     }
+    }
+   }
+   outs {
+    3001
+   }
+  }
+  BoneClass {
+   id 4001
+   name "prop"
+   version 0
+   tl -208 -352
+   outs {
+    3001
+   }
+   bone "prop"
+  }
+  RotationSetClass {
+   id 3001
+   name "Set prop"
+   tl 224 -336
+   funcs {
+    IOPConnectionClass "iop:0" {
+     port 0
+     conn {
+      ConnectionsClass connections {
+       id 2
+       links {
+        ConnectionClass "4001:0" {
+         id 4001
+         port 0
+        }
+       }
+      }
+     }
+    }
+    IOPConnectionClass "iop:1" {
+     port 1
+     conn {
+      ConnectionsClass connections {
+       id 2
+       links {
+        ConnectionClass "2001:0" {
+         id 2001
+         port 0
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+ model "{6725795EB515FB63}Models/Cessna172.xob"
+ version 1
+ compiled ProcAnimCompiledClass {
+  visited {
+   129 1 257
+  }
+  ops {
+   ProcAnimCompiledOp {
+    data {
+     1 131072 0
+    }
+   }
+   ProcAnimCompiledOp {
+    data {
+     1 131072 0
+    }
+   }
+   ProcAnimCompiledOp {
+    data {
+     0 4 65536 0 0 0
+    }
+   }
+  }
+  version 2
+  argsize 5
+ }
+}

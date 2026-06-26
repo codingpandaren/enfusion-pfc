@@ -1,0 +1,290 @@
+MetaFileClass {
+ Name "{6725795EB515FB63}Models/Cessna172.xob"
+ Configurations {
+  FBXResourceClass PC {
+   ExportSkinning 1
+   MaterialAssigns {
+    MaterialAssignClass "{69A8A899CA889229}" {
+     SourceMaterial "Light_White"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893DC}" {
+     SourceMaterial "Center"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893D1}" {
+     SourceMaterial "Texture_0_24"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893D6}" {
+     SourceMaterial "Texture_0_1"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893CB}" {
+     SourceMaterial "Texture_0_2"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893CF}" {
+     SourceMaterial "Prop_Front_Gear"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893CD}" {
+     SourceMaterial "Texture_0_3"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893C2}" {
+     SourceMaterial "Texture_0_4"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893C0}" {
+     SourceMaterial "Texture_0_5"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893C6}" {
+     SourceMaterial "Texture_0_6"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893FA}" {
+     SourceMaterial "Front_Wheel_Constr"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893FF}" {
+     SourceMaterial "Box_Top"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893FD}" {
+     SourceMaterial "Tire"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893F1}" {
+     SourceMaterial "Metal"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893F5}" {
+     SourceMaterial "Texture_0_8"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893E9}" {
+     SourceMaterial "mat00"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893ED}" {
+     SourceMaterial "mat01"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893E2}" {
+     SourceMaterial "Window_P"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893E6}" {
+     SourceMaterial "mat02"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893E4}" {
+     SourceMaterial "Texture_0_10"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88939D}" {
+     SourceMaterial "Window_CP"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889392}" {
+     SourceMaterial "mat00_1"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889390}" {
+     SourceMaterial "mat00_2"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889397}" {
+     SourceMaterial "mat02_1"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889394}" {
+     SourceMaterial "Texture_0_12"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88938A}" {
+     SourceMaterial "Dashboard_Edge"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88938F}" {
+     SourceMaterial "Bench"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88938E}" {
+     SourceMaterial "Mat2"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889383}" {
+     SourceMaterial "Dashboard_Top"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889381}" {
+     SourceMaterial "Panel"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889387}" {
+     SourceMaterial "Co_Pilot_Seat"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889385}" {
+     SourceMaterial "Dash_Comp"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893BB}" {
+     SourceMaterial "Floor"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893B9}" {
+     SourceMaterial "Pilot_Seat"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893BF}" {
+     SourceMaterial "Dash_Comp_Dail"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893BD}" {
+     SourceMaterial "Nose_Cone"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893B2}" {
+     SourceMaterial "Texture_0_13"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893B0}" {
+     SourceMaterial "Wings"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893B6}" {
+     SourceMaterial "Cocpit_roof_stripe"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893A9}" {
+     SourceMaterial "Nav_light_Gr_2"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893AC}" {
+     SourceMaterial "Tail"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893A2}" {
+     SourceMaterial "Hull_Striping"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893A0}" {
+     SourceMaterial "Nav_Light_Red_"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA8893A5}" {
+     SourceMaterial "Nav_Light_Red_2"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88935B}" {
+     SourceMaterial "Air_Intake"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889359}" {
+     SourceMaterial "Nav_Light_Gr"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88935F}" {
+     SourceMaterial "Air_Intake_low"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88935D}" {
+     SourceMaterial "Texture_0_14"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889353}" {
+     SourceMaterial "Texture_0_15"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889351}" {
+     SourceMaterial "Texture_0_17"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889357}" {
+     SourceMaterial "Texture_0"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889355}" {
+     SourceMaterial "Top"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889348}" {
+     SourceMaterial "Texture_0_19"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88934D}" {
+     SourceMaterial "Texture_0_20"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889342}" {
+     SourceMaterial "Texture_0_21"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA889346}" {
+     SourceMaterial "Texture_0_22"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+    MaterialAssignClass "{69A8A899CA88937B}" {
+     SourceMaterial "Texture_0_23"
+     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+    }
+   }
+   MeshParams {
+    MeshParam "cessna172sp.Shape" {
+    }
+   }
+   GeometryParams {
+    GeometryParam UTM_vehicle {
+     LayerPreset "FireGeo"
+     SurfaceProperties {
+      "{1E4F05B3A10A714E}Common/Materials/Game/Armor/armor_1mm.gamemat"
+     }
+     Mass 0
+     Margin 0
+    }
+    GeometryParam "UCX_body.001" {
+     LayerPreset "Vehicle"
+     SurfaceProperties {
+      "{BC12BF6AC97F2458}Common/Materials/Game/Metal/metal_2mm.gamemat"
+     }
+     Mass 0
+     Margin 0
+    }
+    GeometryParam UCX_body {
+     LayerPreset "Vehicle"
+     SurfaceProperties {
+      "{BC12BF6AC97F2458}Common/Materials/Game/Metal/metal_2mm.gamemat"
+     }
+     Mass 0
+     Margin 0
+    }
+   }
+   Common TXOCommonClass "{69A8A3400EB34C64}" : "{0877E7C4BB2B2C9A}Configs/System/ResourceTypes/PC/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass XBOX_ONE : PC {
+   Common TXOCommonClass "{69A8A3400EB34E5C}" : "{9D5B6207F7628CE2}Configs/System/ResourceTypes/XBOX_ONE/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass XBOX_SERIES : PC {
+   Common TXOCommonClass "{69A8A3400EB34FDF}" : "{DD9F02115C764647}Configs/System/ResourceTypes/XBOX_SERIES/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass PS4 : PC {
+   Common TXOCommonClass "{69A8A3400EB34FB6}" : "{53EC476BC921D99A}Configs/System/ResourceTypes/PS4/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass PS5 : PC {
+   Common TXOCommonClass "{69A8A3400EB34F17}" : "{F62AA8E7B8EA9D26}Configs/System/ResourceTypes/PS5/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass HEADLESS : PC {
+   Common TXOCommonClass "{69A8A3400EB348FA}" : "{3A5B3356978039E8}Configs/System/ResourceTypes/HEADLESS/MeshObjectCommon.conf" {
+   }
+  }
+ }
+}

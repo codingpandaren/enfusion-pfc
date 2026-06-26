@@ -1,0 +1,125 @@
+FrameWidgetClass {
+ Name "rootFrame"
+ Slot FrameWidgetSlot "{5E06E0477E40DF5A}" {
+  Anchor 0 0 1 1
+  PositionX 0
+  PositionY 1080
+  SizeX -1920
+  OffsetRight 0
+  SizeY -1080
+  OffsetBottom 0
+  SizeToContent 1
+ }
+ {
+  OverlayWidgetClass "{5E2F07B1370DF35E}" {
+   Name "Overlay0"
+   Slot FrameWidgetSlot "{5E2F07B1370DF32F}" {
+    Anchor 0 1 0 1
+    OffsetLeft 0
+    OffsetTop 0
+    SizeX 0
+    OffsetRight 0
+    SizeY 0
+    OffsetBottom 0
+    Alignment 0 1
+    SizeToContent 1
+   }
+   {
+    VerticalLayoutWidgetClass "{5E2CC7AB4F910563}" {
+     Name "Content"
+     Slot OverlayWidgetSlot {
+      Padding 6 0 0 6
+     }
+     {
+      HorizontalLayoutWidgetClass "{5E2CC7AB5BC891B7}" {
+       Name "Indicators"
+       Slot LayoutSlot "{5E2CC7AB5BC89192}" {
+       }
+       components {
+        SCR_SlotLabelsComponent "{5E2CC7AB2B5D82DC}" {
+        }
+       }
+       {
+        OverlayWidgetClass "{5E12909954CE2280}" {
+         Name "Slot-AutoHover"
+         Slot LayoutSlot "{50E6EB981C1AAF0A}" {
+          VerticalAlign 2
+         }
+        }
+        OverlayWidgetClass "{5E12909954CE22D3}" {
+         Name "Slot-ParkingBrake"
+         Slot LayoutSlot "{50E6EB981C1AAF0A}" {
+          VerticalAlign 2
+         }
+        }
+        OverlayWidgetClass "{5E12909954CE2256}" {
+         Name "Slot-LightsLanding"
+         Slot LayoutSlot "{50E6EB981C1AAF0A}" {
+          VerticalAlign 2
+         }
+        }
+        OverlayWidgetClass "{5E12909954CE202E}" {
+         Name "Slot-DmgFuelTank"
+         Slot LayoutSlot "{50E6EB981C1AAF0A}" {
+          VerticalAlign 2
+         }
+        }
+        OverlayWidgetClass "{5E12909954CE2005}" {
+         Name "Slot-DmgHull"
+         Slot LayoutSlot "{50E6EB981C1AAF0A}" {
+          VerticalAlign 2
+         }
+        }
+        OverlayWidgetClass "{5E12909954CE23D6}" {
+         Name "Slot-DmgEngine"
+         Slot LayoutSlot "{50E6EB981C1AAF0A}" {
+          VerticalAlign 2
+         }
+        }
+       }
+      }
+      HorizontalLayoutWidgetClass "{00000000149932AE}" {
+       Name "Gauges"
+       Slot LayoutSlot "{5E2CC7AB5F72B308}" {
+       }
+       components {
+        SCR_SlotLabelsComponent "{50E8AA0DAD0C13B4}" {
+        }
+       }
+       {
+        OverlayWidgetClass "{00000000978AA007}" {
+         Name "Slot-AirSpeed"
+         Slot LayoutSlot "{50E6EB981C1AAEA0}" {
+          VerticalAlign 2
+          Padding 0 0 6 0
+         }
+        }
+        OverlayWidgetClass "{00000000B7F256FF}" {
+         Name "Slot-ClimbRate"
+         Slot LayoutSlot "{50E6EB981C1AAF6F}" {
+          VerticalAlign 2
+          Padding 6 0 6 0
+         }
+        }
+        OverlayWidgetClass "{00000000405E9421}" {
+         Name "Slot-AltitudeAGL"
+         Slot LayoutSlot "{50E6EB981C1AAF6F}" {
+          VerticalAlign 2
+          Padding 6 0 6 0
+         }
+        }
+        OverlayWidgetClass "{0000000056D7FD97}" {
+         Name "Slot-Altitude"
+         Slot LayoutSlot "{50E6EB981C1AAF6F}" {
+          VerticalAlign 2
+          Padding 6 0 6 0
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

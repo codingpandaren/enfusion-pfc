@@ -1,0 +1,23 @@
+ProcAnimSignalResClass {
+ Inputs {
+  IOPItemInputClass {
+   id 1
+   name "PropellerAngle_1"
+   comment "Prop rotation angle (deg), published by PFC_FlightModel."
+   tl -208 -64
+   ctl 0 -72
+   children {
+    2
+   }
+   valueMax 360
+  }
+ }
+ Outputs {
+  IOPItemOutputClass {
+   id 2
+   name "PropellerAngle_1"
+   tl 128 -64
+   input 1
+  }
+ }
+}

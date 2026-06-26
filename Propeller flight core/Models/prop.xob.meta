@@ -1,0 +1,51 @@
+MetaFileClass {
+ Name "{4588E3C1B0F22D20}Models/prop.xob"
+ Configurations {
+  FBXResourceClass PC {
+   MaterialAssigns {
+    MaterialAssignClass "{69A8B70889985F6D}" {
+     SourceMaterial "Spinner"
+     AssignedMaterial "{9BFA4292C3031C96}Models/Data/Spinner.emat"
+    }
+    MaterialAssignClass "{69A8B70889985F18}" {
+     SourceMaterial "Center"
+     AssignedMaterial "{6EBFEB9C21965CE5}Models/Data/Center.emat"
+    }
+    MaterialAssignClass "{69A8B70889985F1D}" {
+     SourceMaterial "Blades"
+     AssignedMaterial "{DCBDFD4673561B88}Models/Data/Blades.emat"
+    }
+    MaterialAssignClass "{69A8B70889985F10}" {
+     SourceMaterial "Texture_0_13"
+     AssignedMaterial "{A3CE80E13C2717A8}Models/Data/Texture_0_13.emat"
+    }
+   }
+   MeshParams {
+    MeshParam "cessna172sp.Shape.001" {
+    }
+   }
+   Common TXOCommonClass "{69A8B70889E2752C}" : "{0877E7C4BB2B2C9A}Configs/System/ResourceTypes/PC/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass XBOX_ONE : PC {
+   Common TXOCommonClass "{69A8B70889E276B0}" : "{9D5B6207F7628CE2}Configs/System/ResourceTypes/XBOX_ONE/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass XBOX_SERIES : PC {
+   Common TXOCommonClass "{69A8B70889E27654}" : "{DD9F02115C764647}Configs/System/ResourceTypes/XBOX_SERIES/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass PS4 : PC {
+   Common TXOCommonClass "{69A8B70889E27670}" : "{53EC476BC921D99A}Configs/System/ResourceTypes/PS4/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass PS5 : PC {
+   Common TXOCommonClass "{69A8B70889E2761C}" : "{F62AA8E7B8EA9D26}Configs/System/ResourceTypes/PS5/MeshObjectCommon.conf" {
+   }
+  }
+  FBXResourceClass HEADLESS : PC {
+   Common TXOCommonClass "{69A8B70889E2763F}" : "{3A5B3356978039E8}Configs/System/ResourceTypes/HEADLESS/MeshObjectCommon.conf" {
+   }
+  }
+ }
+}
