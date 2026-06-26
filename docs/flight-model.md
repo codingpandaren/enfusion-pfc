@@ -94,7 +94,7 @@ When the owner is registered for replication, `UpdateSignals()` publishes the st
 (names match `VehicleGauge_*.conf` expectations). These drive HUDs and cockpit instruments and replicate to
 all peers. See the [Reference](reference.md#instrument-signals) for the full list.
 
-!!! danger "Signal compression pitfall"
+!!! danger "Signal compression"
     Raw-unit signals (airspeed in km/h, altitude in m, climb in m/s) **must** use
     `SignalCompressionFunc.None`. `Range01` clamps the value to `[0,1]` over the network, which silently
     pins every raw signal at `1` on the receiving side. Only already-normalized 0..1 signals (throttle,

@@ -63,11 +63,6 @@ matter:
 - Runtime key zeroing (`CarThrust`/`CarBrake`/`CarShift`) is handled in script - see
   [Input & Controls](input-and-controls.md#ground-steering-key-de-conflicting).
 
-!!! warning
-    The template-GUID and handbrake issues produce confusing symptoms (crashes, a plane that won't move or
-    feels rigid) that look like physics-tuning problems but aren't. If a new airframe won't roll or crashes
-    under Game Master, check these first.
-
 ## Procedural propeller animation
 
 `Configs/ProcAnims/PFC_Propeller.pap` (+ `.siga`) drives the propeller bone from the `PropellerAngle_1`

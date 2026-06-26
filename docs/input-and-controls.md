@@ -36,23 +36,6 @@ per-axis rate, so control response is smooth and a little "heavy" like a real ai
     The component's *attribute defaults* differ from the values set on the Cessna prefab (shown above). The
     prefab is the source of truth for the reference airframe.
 
-## The CarContext merge - GUID pitfall
-
-PFC's input actions only take effect because the mod's `chimeraInputCommon.conf` **merges into** the vanilla
-file rather than replacing it.
-
-!!! danger "The meta must reuse the base file's GUID"
-    For the merge to happen, the mod's `chimeraInputCommon.conf.meta` must declare the **vanilla base GUID**:
-
-    ```text
-    Name "{795184CF9AD764DB}Configs/System/chimeraInputCommon.conf"
-    ```
-
-    If you give the file a fresh/unique GUID, Enfusion treats it as a separate resource, the actions are
-    **never loaded**, and the controls silently do nothing. The control-hints config
-    (`Configs/ControlHints/AvailableActions.conf`) follows the same rule with the base GUID
-    `{80CC0413DDBDFCB9}`.
-
 ## Ground steering & key de-conflicting
 
 Because the airframe rides on `Wheeled_Base.et`, its native car controls collide with the flight keys.
@@ -65,6 +48,3 @@ the simulate phase, so writing it later is ignored) and:
 - **Injects nose-wheel steering** - writes the smoothed `PFC_Yaw` value into `CarSteering` (scaled by
   `m_fGroundSteerScale`, default `-1.0`), so ++q++/++e++ steer the nose wheel on the ground while ++a++/++d++
   stay roll-only. Set `m_fGroundSteerScale` to `0` to disable (then ++a++/++d++ steer as vanilla).
-
-This is upstream input injection (`ResetAction` + `SetActionValue`), the same approach the R3D mod uses - no
-flicker, unlike `SetSteering()`.

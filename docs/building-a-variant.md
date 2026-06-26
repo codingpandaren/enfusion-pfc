@@ -25,11 +25,6 @@ Create a prefab inheriting `Wheeled_Base.et` and add the core components (mirror
 2. `PFC_FlightController` - tune the slew rates / `m_fGroundSteerScale` for your airframe.
 3. `PFC_FlightModel` - set engine count/thrust, then define your aero surfaces in `m_aSurfaceDefs`.
 
-!!! warning "Defang the wheeled sim"
-    Don't skip this - it's the most common reason a new airframe won't move or crashes. Reuse the vanilla
-    wheeled-sim template GUIDs, set `HasHandbrake 0` with a low `BrakeTorque`, and zero engine power/torque.
-    See [Prefab Setup → Neutralizing the wheeled sim](prefab-setup.md#neutralizing-the-wheeled-sim).
-
 ## 3. Lay out the aero surfaces
 
 Place a `PFC_AeroSurfaceDef` for each lifting/control surface. Start from the Cessna values and scale to your
