@@ -9,6 +9,8 @@ The model is force-based: instead of one set of stability derivatives, the aircr
 **aero surfaces** (`PFC_AeroSurfaceDef` entries in the prefab). Each tick, for every surface:
 
 1. The aircraft's airflow (velocity relative to the air mass) is transformed into the surface's local space.
+   The `GetSurfaceAirVelocityLS()` hook decides what airflow a surface sees — the core passes every surface
+   the CoM airflow; a variant can add the rotational component (ω × r) for physical pitch/yaw/roll damping.
 2. `PFC_AeroSurface.CalculateForce()` computes lift and drag from the local angle of attack.
 3. The resulting force is applied as an impulse **at the surface's position** via `ApplyImpulseAt`, so it
    produces the correct moment about the centre of mass (a tail surface pitches, a wingtip aileron rolls).
@@ -41,6 +43,10 @@ Each surface's `m_iControlAxis` decides what drives its deflection:
 
 `maxDef` is `m_fMaxControlDeflectionDeg` (default 25°).
 
+The axis→deflection mapping lives in the `GetSurfaceDeflection()` hook. A variant can override it to scale
+authority (e.g. high-speed control stiffening) or to serve extra axes added via `modded enum
+PFC_ControlAxis` (e.g. an airbrake); returning `false` leaves a surface undriven.
+
 !!! info "No flap controller in the core"
     The minimal core never deploys flaps - `m_fCurrentFlapAngle` stays 0. A `FLAPS` surface still resolves
     correctly; a variant adds a controller to drive the flap angle.
@@ -58,6 +64,12 @@ thrust = thrustFraction · m_fMaxThrustPerEngine · numEngines · healthMul
 Thrust is applied along the aircraft's forward axis at the centre of mass. Damage scales power down to
 `m_fMinHealthThrustFraction` of full at zero hull health; a destroyed aircraft makes zero thrust and its RPM
 snaps to zero.
+
+Both halves are hooks: `UpdateEngineSpool()` owns the RPM ramp and `ComputeThrustMagnitude()` owns the
+thrust formula (with `GetThrustHealthMultiplier()` for the damage scaling), so a variant can substitute e.g.
+turbojet spool lag, idle residual thrust, or altitude thrust lapse without touching the rest of the tick.
+The fuselage drag term is likewise `GetFuselageDragArea()` — a variant can grow it with speed (transonic
+drag rise) or an airbrake.
 
 ## Angular damping
 

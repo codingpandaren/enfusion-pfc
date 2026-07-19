@@ -54,6 +54,47 @@ The core deliberately stops at flight. Anything else is a component you add to y
 Follow the core's networking patterns when you do: owner-authoritative changes via RPC, and guard per-tick
 RPCs / MP-signal writes on a valid Rpl id (see [Networking & MP](networking.md#boot-window-guard)).
 
+## Extending the flight model itself
+
+If your aircraft needs different *physics* — not just extra systems — do **not** copy or `modded class` the
+core. Subclass it and override the [variant hooks](architecture.md#variant-hooks):
+
+```csharp
+class MyJet_FlightModelClass : PFC_FlightModelClass {}
+class MyJet_FlightModel : PFC_FlightModel
+{
+    override float ComputeThrustMagnitude(float speed, float airDensity, bool destroyed)
+    {
+        // altitude thrust lapse on top of the base behaviour
+        float thrust = super.ComputeThrustMagnitude(speed, airDensity, destroyed);
+        return thrust * Math.Pow(airDensity / m_fAirDensitySeaLevel, 0.85);
+    }
+}
+```
+
+Your prefab then uses `MyJet_FlightModel` in place of `PFC_FlightModel` (a subclass inherits all attributes,
+so existing prefab tuning carries over — you can even swap the class name on an existing component and keep
+its values). The same pattern works for the controller: `MyJet_FlightController : PFC_FlightController`.
+
+- Every hook's base implementation reproduces the stock prop behaviour, so override only what you change.
+- New control axes: `modded enum PFC_ControlAxis { MY_AXIS }` + handle it in a `GetSurfaceDeflection`
+  override. Surfaces with an axis nobody handles simply stay undriven.
+- `OnAeroSimulate()` runs at the end of each authoritative sim tick — the place for extra forces/torques
+  (buffet, rate dampers) or bookkeeping. It runs on the owner *and* the server, so gate any MP-signal
+  writes on ownership + a valid Rpl id, same as the core does.
+
+!!! example "Jet Flight Core"
+    The canonical hook consumer is the **Jet Flight Core** mod (`JFC_`, GUID `69E6A3583D0123DF`): turbojet
+    spool lag + idle residual thrust + altitude lapse (`UpdateEngineSpool`/`ComputeThrustMagnitude`),
+    transonic drag rise + airbrake (`GetFuselageDragArea`), high-IAS control stiffening + G-limiter + an
+    `AIRBRAKE` axis (`GetSurfaceDeflection`), rotational-flow damping (`GetSurfaceAirVelocityLS`), and
+    q-scaled SAS rate dampers + stall buffet (`OnAeroSimulate`). Jets depend on JFC instead of PFC directly.
+
+!!! warning "Why subclass and not `modded class`?"
+    A `modded class PFC_FlightModel` injects your behaviour into **every** PFC aircraft in the session,
+    including other mods' planes. Subclassing keeps your physics opt-in per prefab. Reserve `modded class`
+    for adding small variant-side accessors (the trim-hook pattern), never for changing core behaviour.
+
 ## 5. Wire control hints (optional)
 
 If you add actions, extend `Configs/ControlHints/AvailableActions.conf` - and remember the **base-GUID rule**

@@ -74,7 +74,7 @@ MetaFileClass {
     }
     MaterialAssignClass "{69A8A899CA8893E2}" {
      SourceMaterial "Window_P"
-     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+     AssignedMaterial "{FA6C0944A153F2C0}Assets/Vehicles/Wheeled/S1203/Data/S1203_window.emat"
     }
     MaterialAssignClass "{69A8A899CA8893E6}" {
      SourceMaterial "mat02"
@@ -86,7 +86,7 @@ MetaFileClass {
     }
     MaterialAssignClass "{69A8A899CA88939D}" {
      SourceMaterial "Window_CP"
-     AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
+     AssignedMaterial "{FA6C0944A153F2C0}Assets/Vehicles/Wheeled/S1203/Data/S1203_window.emat"
     }
     MaterialAssignClass "{69A8A899CA889392}" {
      SourceMaterial "mat00_1"
@@ -232,9 +232,19 @@ MetaFileClass {
      SourceMaterial "Texture_0_23"
      AssignedMaterial "{A1918AEF4ECDDFFD}Models/Data/Gray.emat"
     }
+    MaterialAssignClass "{69E6AD6680829D67}" {
+     SourceMaterial "Spinner"
+     AssignedMaterial "{9BFA4292C3031C96}Models/Data/Spinner.emat"
+    }
+    MaterialAssignClass "{69E6AD6680829D0B}" {
+     SourceMaterial "Blades"
+     AssignedMaterial "{DCBDFD4673561B88}Models/Data/Blades.emat"
+    }
    }
    MeshParams {
     MeshParam "cessna172sp.Shape" {
+    }
+    MeshParam "cessna172sp.Shape.001" {
     }
    }
    GeometryParams {

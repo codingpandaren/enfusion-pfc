@@ -287,14 +287,8 @@ class PFC_FlightModel : ScriptGameComponent
 		for (int i = 0; i < m_aSurfaces.Count(); i++)
 		{
 			float deflection;
-			switch (m_aSurfaceAxes[i])
-			{
-				case PFC_ControlAxis.ELEVATOR: deflection = -Math.Clamp(pitch, -1, 1) * maxDef; break;
-				case PFC_ControlAxis.AILERON:  deflection = -roll  * maxDef;      break;
-				case PFC_ControlAxis.RUDDER:   deflection = -yaw   * maxDef;      break;
-				case PFC_ControlAxis.FLAPS:    deflection =  m_fCurrentFlapAngle; break;
-				default: continue;
-			}
+			if (!GetSurfaceDeflection(m_aSurfaceAxes[i], pitch, roll, yaw, maxDef, deflection))
+				continue;
 			if (m_aSurfaceFlipSign[i])
 				deflection = -deflection;
 			m_aSurfaces[i].SetFlapAngle(deflection);
@@ -349,8 +343,9 @@ class PFC_FlightModel : ScriptGameComponent
 			{
 				PFC_AeroSurface surf = m_aSurfaces[i];
 
+				vector surfVelLS = GetSurfaceAirVelocityLS(owner, physics, surf.GetLocalPosition(), velocityLS);
 				vector forceLS;
-				surf.CalculateForce(velocityLS, airDensity, forceLS);
+				surf.CalculateForce(surfVelLS, airDensity, forceLS);
 
 				vector forceWS = owner.VectorToParent(forceLS);
 				vector surfPosWS = owner.CoordToParent(surf.GetLocalPosition());
@@ -360,7 +355,7 @@ class PFC_FlightModel : ScriptGameComponent
 				m_aDebugPositions[i] = surfPosWS;
 			}
 
-			vector dragWS = airVelWS * (-0.5 * airDensity * speed * m_fFuselageDragArea);
+			vector dragWS = airVelWS * (-0.5 * airDensity * speed * GetFuselageDragArea(speed, airDensity));
 			physics.ApplyImpulse(dragWS * timeSlice);
 		}
 		else
@@ -374,54 +369,11 @@ class PFC_FlightModel : ScriptGameComponent
 
 		bool destroyed = (m_DamageManager && m_DamageManager.GetState() == EDamageState.DESTROYED);
 
-		float rpmDelta = m_fRPMRate * m_fMaxRPM * timeSlice;
-		float aggregate = 0;
+		UpdateEngineSpool(throttle, timeSlice, destroyed);
 
-		for (int i = 0; i < m_aEngineRPMs.Count(); i++)
+		float thrustMag = ComputeThrustMagnitude(speed, airDensity, destroyed);
+		if (thrustMag > 0)
 		{
-			float perEngineTarget = 0;
-			if (!destroyed)
-				perEngineTarget = m_fIdleRPM + throttle * (m_fMaxRPM - m_fIdleRPM);
-
-			float current = m_aEngineRPMs[i];
-			if (destroyed)
-			{
-				current = 0;
-			}
-			else
-			{
-				if (current < perEngineTarget)
-					current = Math.Min(current + rpmDelta, perEngineTarget);
-				else
-					current = Math.Max(current - rpmDelta, perEngineTarget);
-			}
-			m_aEngineRPMs[i] = current;
-			aggregate += current;
-		}
-
-		if (m_iNumEngines > 0)
-			m_fEngineRPM = aggregate / m_iNumEngines;
-		else
-			m_fEngineRPM = 0;
-
-		float thrustFraction = 0;
-		if (!destroyed)
-		{
-			float rpmSpan = m_fMaxRPM - m_fIdleRPM;
-			if (rpmSpan > 0)
-				thrustFraction = Math.Clamp((m_fEngineRPM - m_fIdleRPM) / rpmSpan, 0, 1);
-		}
-		if (thrustFraction > 0.001)
-		{
-			float healthMul = 1;
-			if (m_DamageManager)
-			{
-				HitZone defaultHZ = m_DamageManager.GetDefaultHitZone();
-				if (defaultHZ)
-					healthMul = Math.Lerp(m_fMinHealthThrustFraction, 1, defaultHZ.GetHealthScaled());
-			}
-
-			float thrustMag = thrustFraction * m_fMaxThrustPerEngine * m_iNumEngines * healthMul;
 			vector thrustWS = owner.VectorToParent(Vector(0, 0, thrustMag));
 			vector comWS = owner.CoordToParent(physics.GetCenterOfMass());
 			physics.ApplyImpulseAt(comWS, thrustWS * timeSlice);
@@ -454,6 +406,8 @@ class PFC_FlightModel : ScriptGameComponent
 			m_bPrevVelSimValid = true;
 		}
 
+		OnAeroSimulate(owner, physics, timeSlice, speed, aoaDeg, airDensity);
+
 		bool isOwner = !m_RplComponent || m_RplComponent.IsOwner();
 		bool replicationReady = !m_RplComponent || m_RplComponent.Id().IsValid();
 		if (isOwner && replicationReady)
@@ -466,6 +420,90 @@ class PFC_FlightModel : ScriptGameComponent
 			float groundHoriz = Math.Sqrt(velocityWS[0] * velocityWS[0] + velocityWS[2] * velocityWS[2]);
 			UpdateSignals(owner, speed, altitude, m_fAltAGLSmoothed, velocityWS[1], groundHoriz, throttle, pitch, roll, yaw);
 		}
+	}
+
+	// Variant hooks (JetFlightCore etc.). Base implementations reproduce the classic prop behaviour exactly.
+	protected bool GetSurfaceDeflection(int axis, float pitch, float roll, float yaw, float maxDef, out float deflection)
+	{
+		deflection = 0;
+		switch (axis)
+		{
+			case PFC_ControlAxis.ELEVATOR: deflection = -Math.Clamp(pitch, -1, 1) * maxDef; return true;
+			case PFC_ControlAxis.AILERON:  deflection = -roll * maxDef; return true;
+			case PFC_ControlAxis.RUDDER:   deflection = -yaw * maxDef; return true;
+			case PFC_ControlAxis.FLAPS:    deflection = m_fCurrentFlapAngle; return true;
+		}
+		return false;
+	}
+
+	protected float GetFuselageDragArea(float speed, float airDensity)
+	{
+		return m_fFuselageDragArea;
+	}
+
+	protected vector GetSurfaceAirVelocityLS(IEntity owner, Physics physics, vector surfLocalPos, vector velocityLS)
+	{
+		return velocityLS;
+	}
+
+	protected void UpdateEngineSpool(float throttle, float timeSlice, bool destroyed)
+	{
+		float rpmDelta = m_fRPMRate * m_fMaxRPM * timeSlice;
+		float aggregate = 0;
+
+		for (int i = 0; i < m_aEngineRPMs.Count(); i++)
+		{
+			float perEngineTarget = 0;
+			if (!destroyed)
+				perEngineTarget = m_fIdleRPM + throttle * (m_fMaxRPM - m_fIdleRPM);
+
+			float current = m_aEngineRPMs[i];
+			if (destroyed)
+			{
+				current = 0;
+			}
+			else
+			{
+				if (current < perEngineTarget)
+					current = Math.Min(current + rpmDelta, perEngineTarget);
+				else
+					current = Math.Max(current - rpmDelta, perEngineTarget);
+			}
+			m_aEngineRPMs[i] = current;
+			aggregate += current;
+		}
+
+		if (m_iNumEngines > 0)
+			m_fEngineRPM = aggregate / m_iNumEngines;
+		else
+			m_fEngineRPM = 0;
+	}
+
+	protected float GetThrustHealthMultiplier()
+	{
+		if (!m_DamageManager)
+			return 1;
+		HitZone defaultHZ = m_DamageManager.GetDefaultHitZone();
+		if (!defaultHZ)
+			return 1;
+		return Math.Lerp(m_fMinHealthThrustFraction, 1, defaultHZ.GetHealthScaled());
+	}
+
+	protected float ComputeThrustMagnitude(float speed, float airDensity, bool destroyed)
+	{
+		if (destroyed)
+			return 0;
+		float thrustFraction = 0;
+		float rpmSpan = m_fMaxRPM - m_fIdleRPM;
+		if (rpmSpan > 0)
+			thrustFraction = Math.Clamp((m_fEngineRPM - m_fIdleRPM) / rpmSpan, 0, 1);
+		if (thrustFraction <= 0.001)
+			return 0;
+		return thrustFraction * m_fMaxThrustPerEngine * m_iNumEngines * GetThrustHealthMultiplier();
+	}
+
+	protected void OnAeroSimulate(IEntity owner, Physics physics, float timeSlice, float speed, float aoaDeg, float airDensity)
+	{
 	}
 
 	override void EOnFrame(IEntity owner, float timeSlice)

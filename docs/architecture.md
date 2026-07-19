@@ -29,19 +29,41 @@ ownership transfer and grants the input context (`CarContext`) that the flight c
 | `PFC_AeroSurfaceDef` | The **editable** surface definition placed in the prefab; builds a config and resolves its axes, handles X-mirroring. |
 | `PFC_PilotUtil` | Helper to determine the local *active* pilot. |
 
+## Variant hooks
+
+`PFC_FlightModel` exposes a set of **protected virtual hooks** so a variant can subclass the model and
+replace one piece of the simulation without forking `EOnSimulate`. The base implementations reproduce the
+classic prop behaviour exactly, so plain PFC aircraft are unaffected.
+
+| Hook | Replaces | Base behaviour |
+|---|---|---|
+| `GetSurfaceDeflection(axis, pitch, roll, yaw, maxDef, out deflection)` | per-axis surface deflection | the four core axes; returns `false` for unknown axes (surface stays undriven) |
+| `GetSurfaceAirVelocityLS(owner, physics, surfLocalPos, velocityLS)` | per-surface local airflow | every surface sees the CoM airflow (no rotational flow) |
+| `GetFuselageDragArea(speed, airDensity)` | fuselage drag area | returns `m_fFuselageDragArea` |
+| `UpdateEngineSpool(throttle, timeSlice, destroyed)` | RPM spool | linear ramp at `m_fRPMRate` |
+| `ComputeThrustMagnitude(speed, airDensity, destroyed)` | total thrust (N) | 0 at idle → full at max RPM, × health |
+| `GetThrustHealthMultiplier()` | damage → power scaling | linear to `m_fMinHealthThrustFraction` |
+| `OnAeroSimulate(owner, physics, timeSlice, speed, aoaDeg, airDensity)` | end-of-tick extension point | empty |
+
+New control axes can be added with `modded enum PFC_ControlAxis` and handled in a `GetSurfaceDeflection`
+override. The first consumer of these hooks is the **Jet Flight Core** mod (`JFC_FlightModel`), which layers
+turbojet spool, transonic drag rise, airbrake, rotational-flow damping, G-limits and buffet on top of the
+core — see [Building a Variant](building-a-variant.md#extending-the-flight-model-itself).
+
 ## Execution flow (per simulation tick)
 
 ```text
 EOnSimulate (owner / server only)
  ├─ PFC_FlightController.PollInput()      → smoothed pitch/roll/yaw/throttle
- ├─ set each surface's flap deflection from its control axis
+ ├─ set each surface's deflection          → GetSurfaceDeflection() per axis
  ├─ guard against NaN / teleport-spike velocity (reset or clamp)
  ├─ RefreshWind()                          → steady wind + gradient + gusts
- ├─ for each surface: CalculateForce() → ApplyImpulseAt(surfacePos, force·dt)
- ├─ fuselage drag impulse
- ├─ spool engine RPM, apply thrust impulse at the centre of mass
+ ├─ for each surface: CalculateForce(GetSurfaceAirVelocityLS()) → ApplyImpulseAt(surfacePos, force·dt)
+ ├─ fuselage drag impulse                  → GetFuselageDragArea()
+ ├─ UpdateEngineSpool(), thrust impulse at CoM ← ComputeThrustMagnitude()
  ├─ speed-scaled angular-rate damping
  ├─ compute normal G-load
+ ├─ OnAeroSimulate()                       → variant extension point (empty in the core)
  └─ (owner, once registered) UpdateSignals() → instrument MP signals
 
 EOnFrame (all peers)

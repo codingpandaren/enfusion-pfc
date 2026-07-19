@@ -29,6 +29,22 @@ overrides several of these - the prefab is authoritative for the reference airfr
 | `m_fAltAGLSmoothingTau` | 0.5 | Radar-altimeter smoothing tau (s). |
 | `m_aSurfaceDefs` | - | Array of `PFC_AeroSurfaceDef` (the aero surfaces). |
 
+### Variant hooks (protected virtual)
+
+Overridable by a `PFC_FlightModel` subclass; base implementations reproduce the stock prop behaviour. See
+[Architecture → Variant hooks](architecture.md#variant-hooks) and
+[Building a Variant → Extending the flight model itself](building-a-variant.md#extending-the-flight-model-itself).
+
+| Hook | Purpose |
+|---|---|
+| `GetSurfaceDeflection(axis, pitch, roll, yaw, maxDef, out deflection)` | Axis → surface deflection mapping; `false` = surface undriven. Extra axes via `modded enum PFC_ControlAxis`. |
+| `GetSurfaceAirVelocityLS(owner, physics, surfLocalPos, velocityLS)` | Per-surface local airflow (base: CoM airflow for all surfaces). |
+| `GetFuselageDragArea(speed, airDensity)` | Fuselage drag area (base: `m_fFuselageDragArea`). |
+| `UpdateEngineSpool(throttle, timeSlice, destroyed)` | RPM spool toward target (base: linear `m_fRPMRate` ramp). |
+| `ComputeThrustMagnitude(speed, airDensity, destroyed)` | Total thrust in N (base: idle→max fraction × max thrust × engines × health). |
+| `GetThrustHealthMultiplier()` | Damage → power scaling. |
+| `OnAeroSimulate(owner, physics, timeSlice, speed, aoaDeg, airDensity)` | End-of-tick extension point on the authoritative peer (base: empty). |
+
 ## PFC_FlightController
 
 | Attribute | Default | Description |

@@ -103,6 +103,7 @@ Vehicle : "{62F416029692CE40}Prefabs/Vehicles/Core/Wheeled_Base.et" {
      }
      ExitTeleportPositionInfo PointInfo "{69A8A89A2E60D915}" {
      }
+     FakeDoor 1
     }
    }
    CompartmentSlots {
@@ -110,7 +111,7 @@ Vehicle : "{62F416029692CE40}Prefabs/Vehicles/Core/Wheeled_Base.et" {
      DefaultOccupantName "Pilot"
      CompartmentUniqueName "Pilot"
      PassengerPositionInfo EntitySlotInfo "{A1CB25848A3D93A8}" {
-      Offset 0 1.1833 0.447
+      Offset 0 1.1127 0.9011
      }
     }
    }
@@ -322,6 +323,10 @@ Vehicle : "{62F416029692CE40}Prefabs/Vehicles/Core/Wheeled_Base.et" {
   VehicleAnimationComponent "{50B803EAA459B0AF}" {
    AnimGraph "{2E7DC909B8C4128F}Assets/Vehicles/Helicopters/UH1H/workspace/UH1A.agr"
    AnimInstance "{C3179CD2A4CD4061}Assets/Vehicles/Helicopters/UH1H/workspace/UH1A.asi"
+   AnimInjection AnimationAttachmentInfo "{50B803EA8AD25BC8}" {
+    AnimGraph "{2E7DC909B8C4128F}Assets/Vehicles/Helicopters/UH1H/workspace/UH1A.agr"
+    AnimInstance "{E01854FEDB1BA7B0}Assets/Vehicles/Helicopters/UH1H/workspace/UH1A_player.asi"
+   }
   }
   NwkCarMovementComponent "{5D6CA5AFEC980F35}" {
    Enabled 0
