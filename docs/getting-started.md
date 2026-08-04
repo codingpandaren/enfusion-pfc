@@ -48,9 +48,10 @@ PFC registers a debug menu under **F6 → Prop Flight**:
 Propeller flight core/
 ├── addon.gproj
 ├── Configs/
-│   ├── ControlHints/AvailableActions.conf   # control hints (uses base GUID - see Input page)
+│   ├── ControlHints/AvailableActions.conf   # control hints (merges into the vanilla resource - see Input page)
 │   ├── ProcAnims/PFC_Propeller.pap|siga      # propeller spin procedural anim
-│   └── System/chimeraInputCommon.conf        # PFC_ input actions merged into CarContext
+│   ├── System/chimeraInputCommon.conf        # shared Airplane_ input actions merged into CarContext
+│   └── System/keyBindingMenu.conf            # the "Airplane" controls tab
 ├── Models/                                   # Cessna172.xob, prop.xob
 ├── Prefabs/Vehicles/Cessna172.et             # reference airframe (inherits Wheeled_Base.et)
 ├── Scripts/Game/
@@ -61,6 +62,7 @@ Propeller flight core/
 │       ├── PFC_AeroSurfaceDef.c              # editable surface definition (+ mirror)
 │       ├── PFC_FlightController.c            # pilot input → smoothed control values
 │       ├── PFC_FlightModel.c                 # the flight model (forces, thrust, signals)
+│       ├── PFC_FreeLookController.c          # device-aware cockpit free look
 │       └── PFC_NwkMovementComponent.c        # owner → proxy state replication
 ├── UI/layouts/HUD/PFC_VehicleHUD.layout
 └── Worlds/MP_Test.ent

@@ -270,7 +270,7 @@ class PFC_FlightModel : ScriptGameComponent
 
 		float maxDef = m_fMaxControlDeflectionDeg;
 
-		float flapTarget = 0;
+		float flapTarget = GetFlapTargetAngle();
 		if (m_fFlapDeployDurationSeconds > 0 && m_fFlapDeflectionDeg > 0)
 		{
 			float flapRate = m_fFlapDeflectionDeg / m_fFlapDeployDurationSeconds;
@@ -444,6 +444,11 @@ class PFC_FlightModel : ScriptGameComponent
 	protected vector GetSurfaceAirVelocityLS(IEntity owner, Physics physics, vector surfLocalPos, vector velocityLS)
 	{
 		return velocityLS;
+	}
+
+	protected float GetFlapTargetAngle()
+	{
+		return 0;
 	}
 
 	protected void UpdateEngineSpool(float throttle, float timeSlice, bool destroyed)

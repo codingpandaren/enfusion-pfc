@@ -11,9 +11,15 @@ The prefab inherits the vanilla `Wheeled_Base.et` (`62F416029692CE40`) and adds:
 Vehicle : Wheeled_Base.et
 ├── MeshObject                 → Models/Cessna172.xob
 ├── PFC_FlightController        (input smoothing, ground steering)
+├── PFC_FreeLookController      (device-aware cockpit free look)
 └── PFC_FlightModel             (the flight model + aero surface defs)
     └── m_aSurfaceDefs[]         (Wing, Aileron, Elevator, Rudder, ...)
 ```
+
+The **pilot compartment slot** additionally sets `ForcedFreeLook 1` - together with `PFC_FreeLookController`
+this produces the helicopter-style camera (mouse always free-looks, gamepad pans only while the Freelook
+modifier is held). Both pieces are required; see
+[Input & Controls](input-and-controls.md#free-look).
 
 ![The Cessna172 prefab component tree in the Workbench inspector](assets/images/prefab-components.png)
 

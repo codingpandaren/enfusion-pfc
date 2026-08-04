@@ -88,6 +88,8 @@ Vehicle : "{62F416029692CE40}Prefabs/Vehicles/Core/Wheeled_Base.et" {
   }
   PFC_NwkMovementComponent "{69A8A34010000011}" {
   }
+  PFC_FreeLookController "{69A8A34010000013}" {
+  }
   RigidBody "{51DAA09FECF52BBF}" {
    Active Active
    Mass 1100
@@ -113,6 +115,7 @@ Vehicle : "{62F416029692CE40}Prefabs/Vehicles/Core/Wheeled_Base.et" {
      PassengerPositionInfo EntitySlotInfo "{A1CB25848A3D93A8}" {
       Offset 0 1.1127 0.9011
      }
+     ForcedFreeLook 1
     }
    }
   }

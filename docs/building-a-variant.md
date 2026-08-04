@@ -24,6 +24,8 @@ Create a prefab inheriting `Wheeled_Base.et` and add the core components (mirror
 1. `MeshObject` → your aircraft model.
 2. `PFC_FlightController` - tune the slew rates / `m_fGroundSteerScale` for your airframe.
 3. `PFC_FlightModel` - set engine count/thrust, then define your aero surfaces in `m_aSurfaceDefs`.
+4. `PFC_FreeLookController` - plus `ForcedFreeLook 1` on the pilot compartment slot, for the
+   helicopter-style cockpit camera (see [Input & Controls](input-and-controls.md#free-look)).
 
 ## 3. Lay out the aero surfaces
 
@@ -97,6 +99,6 @@ its values). The same pattern works for the controller: `MyJet_FlightController 
 
 ## 5. Wire control hints (optional)
 
-If you add actions, extend `Configs/ControlHints/AvailableActions.conf` - and remember the **base-GUID rule**
-applies to both the input config and the control-hints config (see
-[Input & Controls](input-and-controls.md#the-carcontext-merge-guid-pitfall)).
+If you add actions, extend `Configs/ControlHints/AvailableActions.conf` - and remember the
+**resource-merge rule** applies to both the input config and the control-hints config (see
+[Input & Controls](input-and-controls.md#the-airplane-controls-tab)).

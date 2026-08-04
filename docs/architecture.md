@@ -22,7 +22,8 @@ ownership transfer and grants the input context (`CarContext`) that the flight c
 | Component | Responsibility |
 |---|---|
 | `PFC_FlightModel` | The flight model. Builds aero surfaces, applies per-surface lift/drag + thrust impulses, spools engine RPM, angular damping, wind/gusts, publishes instrument signals, debug draw. Runs on owner + server. |
-| `PFC_FlightController` | Reads pilot input from `CarContext`, smooths it (slew-rate limited), exposes pitch/roll/yaw/throttle to the flight model, relays input to the server, and injects ground steering. |
+| `PFC_FlightController` | Reads the shared `Airplane_*` pilot input from `CarContext`, smooths it (slew-rate limited), exposes pitch/roll/yaw/throttle to the flight model, relays input to the server, and injects ground steering. |
+| `PFC_FreeLookController` | Device-aware cockpit free look for the local pilot: mouse & keyboard always free-look, gamepad pans only while the Freelook modifier is held and keeps the released angle. Needs `ForcedFreeLook 1` on the pilot slot. |
 | `PFC_NwkMovementComponent` | Replicates owner→proxy movement state (transform + velocity) so remote viewers see smooth motion. |
 | `PFC_AeroSurface` | A single aerodynamic panel: given local airflow + air density, returns the lift+drag force. Pure math, no engine state. |
 | `PFC_AeroSurfaceConfig` | Runtime aero parameters for one surface (chord, span, lift slope, stall, etc.). |
@@ -39,6 +40,7 @@ classic prop behaviour exactly, so plain PFC aircraft are unaffected.
 |---|---|---|
 | `GetSurfaceDeflection(axis, pitch, roll, yaw, maxDef, out deflection)` | per-axis surface deflection | the four core axes; returns `false` for unknown axes (surface stays undriven) |
 | `GetSurfaceAirVelocityLS(owner, physics, surfLocalPos, velocityLS)` | per-surface local airflow | every surface sees the CoM airflow (no rotational flow) |
+| `GetFlapTargetAngle()` | flap target angle (deg) | 0 — the core never deploys flaps |
 | `GetFuselageDragArea(speed, airDensity)` | fuselage drag area | returns `m_fFuselageDragArea` |
 | `UpdateEngineSpool(throttle, timeSlice, destroyed)` | RPM spool | linear ramp at `m_fRPMRate` |
 | `ComputeThrustMagnitude(speed, airDensity, destroyed)` | total thrust (N) | 0 at idle → full at max RPM, × health |

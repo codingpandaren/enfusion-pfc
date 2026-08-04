@@ -39,6 +39,7 @@ Overridable by a `PFC_FlightModel` subclass; base implementations reproduce the 
 |---|---|
 | `GetSurfaceDeflection(axis, pitch, roll, yaw, maxDef, out deflection)` | Axis → surface deflection mapping; `false` = surface undriven. Extra axes via `modded enum PFC_ControlAxis`. |
 | `GetSurfaceAirVelocityLS(owner, physics, surfLocalPos, velocityLS)` | Per-surface local airflow (base: CoM airflow for all surfaces). |
+| `GetFlapTargetAngle()` | Flap target angle in deg; the core ramps `m_fCurrentFlapAngle` toward it (base: 0, never deploys). |
 | `GetFuselageDragArea(speed, airDensity)` | Fuselage drag area (base: `m_fFuselageDragArea`). |
 | `UpdateEngineSpool(throttle, timeSlice, destroyed)` | RPM spool toward target (base: linear `m_fRPMRate` ramp). |
 | `ComputeThrustMagnitude(speed, airDensity, destroyed)` | Total thrust in N (base: idle→max fraction × max thrust × engines × health). |
@@ -54,11 +55,19 @@ Overridable by a `PFC_FlightModel` subclass; base implementations reproduce the 
 | `m_fPitchControlRate` | 0.7 | Pitch input slew rate (units/s). |
 | `m_fYawControlRate` | 1.5 | Yaw input slew rate (units/s). |
 | `m_fPitchInputScale` | 0.7 | Max pitch input magnitude (0..1). |
-| `m_fGroundSteerScale` | -1.0 | Nose-wheel steering scale from `PFC_Yaw`; 0 disables. |
+| `m_fGroundSteerScale` | -1.0 | Nose-wheel steering scale from `Airplane_Yaw`; 0 disables. |
 | `m_fInputSendIntervalMs` | 16 | Milliseconds between input RPCs to the server. |
 
 _Cessna prefab overrides:_ `m_fControlRate 3.5`, `m_fPitchControlRate 3`, `m_fYawControlRate 3.5`,
 `m_fPitchInputScale 1`.
+
+## PFC_FreeLookController
+
+No attributes. Runs only for the locally controlled pilot (any seat whose slot is a
+`PilotCompartmentSlot`), per client. Each frame it drives the character's free-look state by input device:
+mouse & keyboard get forced free look, gamepad gets the free-look state cleared unless the vanilla
+`Freelook` modifier is held. Requires `ForcedFreeLook 1` on the pilot compartment slot to hold the released
+camera angle - see [Input & Controls](input-and-controls.md#free-look) for the behaviour and setup.
 
 ## PFC_AeroSurfaceDef
 

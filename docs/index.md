@@ -25,6 +25,10 @@ The reference airframe shipped with the core is a **Cessna 172** built on the va
   rate, RPM, pitch/bank/heading, G-load, control-surface angles) for HUDs and cockpit instruments.
 - **MP / dedicated-server ready** - the owner client (or the server when unmanned) is authoritative; remote
   proxies receive replicated transform + velocity and locally drive their visuals.
+- **Shared "Airplane" controls** - defines the `Airplane_*` action set and the Airplane tab in the Controls
+  menu, reused by every flight mod built on the core.
+- **Helicopter-style free look** - mouse always free-looks; gamepad pans with the Freelook modifier held and
+  keeps the camera where it was released (see [Input & Controls](input-and-controls.md#free-look)).
 - **Extensible by subclass** - protected variant hooks (spool, thrust, drag, surface deflection, per-surface
   airflow, end-of-tick) let a variant swap individual pieces of the sim without forking it. The
   **Jet Flight Core** mod builds its jet flight model this way (see
@@ -44,5 +48,5 @@ The reference airframe shipped with the core is a **Cessna 172** built on the va
 
 - New to the code? Start with [Getting Started](getting-started.md) then [Architecture](architecture.md).
 - Tuning the sim? See [Flight Model](flight-model.md) and the [Reference](reference.md) tables.
-- Wiring controls? See [Input & Controls](input-and-controls.md) - note the **input-config GUID pitfall**.
+- Wiring controls? See [Input & Controls](input-and-controls.md) - note the **resource-merge pitfall**.
 - Making your own aircraft? See [Building a Variant](building-a-variant.md).

@@ -20,7 +20,7 @@ class PFC_FlightController : ScriptGameComponent
 	[Attribute("0.7", UIWidgets.EditBox, "Max pitch input magnitude (0..1). Caps elevator authority.")]
 	protected float m_fPitchInputScale;
 
-	[Attribute("-1.0", UIWidgets.EditBox, "Nose-wheel ground steering scale. The smoothed PFC_Yaw (Q/E) input is written into the native CarSteering action so the wheel sim steers the nose wheel, freeing A/D to roll only. Sign matches rudder convention (Q=left, E=right); flip to invert; 0 disables (A/D steers as vanilla).")]
+	[Attribute("-1.0", UIWidgets.EditBox, "Nose-wheel ground steering scale. The smoothed Airplane_Yaw (Q/E) input is written into the native CarSteering action so the wheel sim steers the nose wheel, freeing A/D to roll only. Sign matches rudder convention (Q=left, E=right); flip to invert; 0 disables (A/D steers as vanilla).")]
 	protected float m_fGroundSteerScale;
 
 	[Attribute("16", UIWidgets.EditBox, "Milliseconds between input RPCs to server.")]
@@ -105,29 +105,33 @@ class PFC_FlightController : ScriptGameComponent
 		m_bLocalPilotActive = LocalIsPiloting();
 
 		float rollMaxDelta  = m_fControlRate * timeSlice;
-		float pitchMaxDelta = m_fPitchControlRate * timeSlice;
 		float yawMaxDelta   = m_fYawControlRate * timeSlice;
 
 		if (!m_bLocalPilotActive || !m_InputMgr)
 		{
-			m_fPitchInput = MoveTowards(m_fPitchInput, 0, pitchMaxDelta);
+			m_fPitchInput = MoveTowards(m_fPitchInput, 0, GetPitchSlewRate(m_fPitchInput, 0) * timeSlice);
 			m_fRollInput  = MoveTowards(m_fRollInput,  0, rollMaxDelta);
 			m_fYawInput   = MoveTowards(m_fYawInput,   0, yawMaxDelta);
 		}
 		else
 		{
-			float pitch = m_InputMgr.GetActionValue("PFC_Pitch");
+			float pitch = 0;
+			float roll = 0;
+			if (!PFC_PilotUtil.IsGamepadFreelookActive())
+			{
+				pitch = m_InputMgr.GetActionValue("Airplane_Pitch");
+				roll  = m_InputMgr.GetActionValue("Airplane_Roll");
+			}
 			float pitchTarget = Math.Clamp(pitch, -1, 1) * m_fPitchInputScale;
-			m_fPitchInput = MoveTowards(m_fPitchInput, pitchTarget, pitchMaxDelta);
+			m_fPitchInput = MoveTowards(m_fPitchInput, pitchTarget, GetPitchSlewRate(m_fPitchInput, pitchTarget) * timeSlice);
 
-			float roll = m_InputMgr.GetActionValue("PFC_Roll");
 			m_fRollInput = MoveTowards(m_fRollInput, Math.Clamp(roll, -1, 1), rollMaxDelta);
 
-			float yaw = m_InputMgr.GetActionValue("PFC_Yaw");
+			float yaw = m_InputMgr.GetActionValue("Airplane_Yaw");
 			m_fYawInput = MoveTowards(m_fYawInput, Math.Clamp(yaw, -1, 1), yawMaxDelta);
 
-			float thrUp   = m_InputMgr.GetActionValue("PFC_ThrottleUp");
-			float thrDown = m_InputMgr.GetActionValue("PFC_ThrottleDown");
+			float thrUp   = m_InputMgr.GetActionValue("Airplane_ThrottleUp");
+			float thrDown = m_InputMgr.GetActionValue("Airplane_ThrottleDown");
 			if (thrUp > 0.5)
 				m_fThrottle = Math.Clamp(m_fThrottle + timeSlice * m_fThrottleRate, 0, 1);
 			if (thrDown > 0.5)
@@ -171,6 +175,12 @@ class PFC_FlightController : ScriptGameComponent
 		m_fRollInput = roll;
 		m_fYawInput = yaw;
 		m_fThrottle = throttle;
+	}
+
+	// Variant hook (JetFlightCore etc.): per-frame pitch slew rate (units/sec).
+	protected float GetPitchSlewRate(float current, float target)
+	{
+		return m_fPitchControlRate;
 	}
 
 	static float MoveTowards(float current, float target, float maxDelta)

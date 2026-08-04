@@ -48,8 +48,10 @@ authority (e.g. high-speed control stiffening) or to serve extra axes added via 
 PFC_ControlAxis` (e.g. an airbrake); returning `false` leaves a surface undriven.
 
 !!! info "No flap controller in the core"
-    The minimal core never deploys flaps - `m_fCurrentFlapAngle` stays 0. A `FLAPS` surface still resolves
-    correctly; a variant adds a controller to drive the flap angle.
+    The minimal core never deploys flaps - the `GetFlapTargetAngle()` hook returns 0, so
+    `m_fCurrentFlapAngle` stays 0. A `FLAPS` surface still resolves correctly; a variant overrides the hook
+    to drive the flap angle and the core handles the deploy ramp (`m_fFlapDeployDurationSeconds`) and the
+    `FlapAngle` signal.
 
 ## Engine & thrust
 

@@ -15,4 +15,12 @@ class PFC_PilotUtil
 			return false;
 		return slot.IsPiloting();
 	}
+
+	static bool IsGamepadFreelookActive()
+	{
+		InputManager im = GetGame().GetInputManager();
+		if (!im || im.IsUsingMouseAndKeyboard())
+			return false;
+		return im.GetActionValue("Freelook") > 0.1;
+	}
 }
