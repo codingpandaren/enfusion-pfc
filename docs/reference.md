@@ -57,6 +57,8 @@ Overridable by a `PFC_FlightModel` subclass; base implementations reproduce the 
 | `m_fPitchInputScale` | 0.7 | Max pitch input magnitude (0..1). |
 | `m_fGroundSteerScale` | -1.0 | Nose-wheel steering scale from `Airplane_Yaw`; 0 disables. |
 | `m_fInputSendIntervalMs` | 16 | Milliseconds between input RPCs to the server. |
+| `m_bPersistentPitch` | 0 | DCS-style keyboard pitch: W/S moves the virtual yoke and releasing holds it in place; opposite input returns it. Removes keyboard yoyo. Pitch slew rates (and any `GetPitchSlewRate` override) are bypassed in this mode. Digital (key) input only — gamepad/joystick/mouse axes keep normal spring-back behavior. |
+| `m_fPersistentPitchSeconds` | 2.5 | Persistent pitch: seconds of held input for center-to-full yoke travel. |
 
 _Cessna prefab overrides:_ `m_fControlRate 3.5`, `m_fPitchControlRate 3`, `m_fYawControlRate 3.5`,
 `m_fPitchInputScale 1`.

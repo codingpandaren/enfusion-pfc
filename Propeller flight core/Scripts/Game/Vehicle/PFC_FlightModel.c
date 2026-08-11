@@ -3,6 +3,7 @@ modded enum SCR_DebugMenuID
 	PFC_ROOT,
 	PFC_DEBUG_DRAW,
 	PFC_DEBUG_APPROACH,
+	PFC_DEBUG_INPUT,
 }
 
 [ComponentEditorProps(category: "GameScripted/PropFlightCore", description: "Flight model. Per-surface lift/drag + thrust via rigid body impulses. Runs on owner + server; proxies receive state via PFC_NwkMovementComponent.")]
@@ -78,6 +79,8 @@ class PFC_FlightModel : ScriptGameComponent
 
 	protected ref LocalWeatherSituation m_WeatherSituation;
 	protected vector m_vWindWS;
+
+	vector GetWindWS() { return m_vWindWS; }
 	protected vector m_vSteadyWindWS;
 	protected float m_fSteadyWindSpeed;
 	protected float m_fWindRefreshTimer;
@@ -157,6 +160,7 @@ class PFC_FlightModel : ScriptGameComponent
 		DiagMenu.RegisterMenu(SCR_DebugMenuID.PFC_ROOT, "Prop Flight", "");
 		DiagMenu.RegisterBool(SCR_DebugMenuID.PFC_DEBUG_DRAW, "f6", "Debug draw", "Prop Flight");
 		DiagMenu.RegisterBool(SCR_DebugMenuID.PFC_DEBUG_APPROACH, "", "Setup approach", "Prop Flight");
+		DiagMenu.RegisterBool(SCR_DebugMenuID.PFC_DEBUG_INPUT, "", "Input debug (raw vs smoothed)", "Prop Flight");
 	}
 
 	override void EOnInit(IEntity owner)

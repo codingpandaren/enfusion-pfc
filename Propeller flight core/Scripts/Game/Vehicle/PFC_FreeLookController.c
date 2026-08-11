@@ -56,6 +56,13 @@ class PFC_FreeLookController : ScriptGameComponent
 		IEntity local = SCR_PlayerController.GetLocalControlledEntity();
 		if (!local)
 			return;
+		
+		if (!LocalInPilotSeat(local, owner))
+		{
+			Apply(local, false);
+			m_bLocalSeated = false;
+			return;
+		}
 		InputManager im = GetGame().GetInputManager();
 		if (!im)
 			return;
@@ -66,7 +73,7 @@ class PFC_FreeLookController : ScriptGameComponent
 		if (!ctrl)
 			return;
 
-		bool desired = im.IsUsingMouseAndKeyboard();
+		bool desired = im.IsUsingMouseAndKeyboard() || !CharacterControllerComponent.GetGamepadControlAircraft();
 		if (!m_bApplied || desired != m_bAppliedValue)
 		{
 			ctrl.SetForcedFreeLook(desired);
@@ -95,6 +102,20 @@ class PFC_FreeLookController : ScriptGameComponent
 		if (!mgr)
 			return false;
 		BaseCompartmentSlot slot = mgr.FindCompartment(slotID, managerId);
+		return PilotCompartmentSlot.Cast(slot) != null;
+	}
+
+	protected bool LocalInPilotSeat(IEntity local, IEntity vehicle)
+	{
+		ChimeraCharacter ch = ChimeraCharacter.Cast(local);
+		if (!ch)
+			return false;
+		CompartmentAccessComponent access = ch.GetCompartmentAccessComponent();
+		if (!access)
+			return false;
+		BaseCompartmentSlot slot = access.GetCompartment();
+		if (!slot || slot.GetOwner().GetRootParent() != vehicle)
+			return false;
 		return PilotCompartmentSlot.Cast(slot) != null;
 	}
 }

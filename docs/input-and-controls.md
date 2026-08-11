@@ -78,6 +78,24 @@ per-axis rate, so control response is smooth and a little "heavy" like a real ai
     The component's *attribute defaults* differ from the values set on the Cessna prefab (shown above). The
     prefab is the source of truth for the reference airframe.
 
+## Persistent pitch
+
+With `m_bPersistentPitch` enabled, pitch input stops being spring-loaded: holding W/S *moves* the virtual
+yoke (center-to-full in `m_fPersistentPitchSeconds`), releasing **holds it in place**, and opposite input
+walks it back. This eliminates the keyboard pitch-yoyo entirely and doubles as a trim replacement — the
+pilot leaves the yoke where the aircraft flies level. Roll and yaw keep the spring-back slew behavior.
+
+Persistent pitch applies to **digital (key) input only**. Analog devices — gamepad and joystick axes, or a
+mouse axis the player binds to pitch — keep the normal spring-back behavior even with the flag enabled:
+stick deflection maps to yoke position through the usual slew rates, and centering the stick recenters the
+yoke. The controller classifies the active input each frame via `GetActionInputType("Airplane_Pitch")`
+(`DIGITAL` vs the analog types) and latches the mode of the last nonzero input, so releasing a key holds
+the yoke while releasing a stick recenters it — and the split follows user rebinding automatically.
+
+In digital mode the pitch slew rates and any `GetPitchSlewRate` subclass override are bypassed. Attitude-hold
+style assists should be disabled alongside it: they detect "hands-off" from the raw action value and would
+integrate trim against the held yoke.
+
 ## Ground steering & key de-conflicting
 
 Because the airframe rides on `Wheeled_Base.et`, its native car controls collide with the flight keys.
