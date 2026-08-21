@@ -32,6 +32,18 @@ class PFC_FlightController : ScriptGameComponent
 	[Attribute("2.5", UIWidgets.EditBox, "Persistent pitch: seconds of held input for full yoke travel (center to full deflection).")]
 	protected float m_fPersistentPitchSeconds;
 
+	[Attribute("0.04", UIWidgets.EditBox, "Mouse aircraft control: pitch stick deflection per unit of Airplane_MousePitch. Used while the vanilla 'Mouse aircraft control' gameplay setting is on; mouse position becomes a persistent virtual stick, hold/tap Freelook (Alt) to look around. Negative inverts.")]
+	protected float m_fMouseFlightPitchSens;
+
+	[Attribute("0.04", UIWidgets.EditBox, "Mouse aircraft control: roll stick deflection per unit of Airplane_MouseRoll. Negative inverts.")]
+	protected float m_fMouseFlightRollSens;
+
+	[Attribute("2.5", UIWidgets.EditBox, "Mouse aircraft control: slew rate (units/sec) of the published input chasing the mouse stick, same for pitch and roll so the pilot hand moves uniformly. High-IAS pitch slew falloff still caps pitch on top.")]
+	protected float m_fMouseStickSlewRate;
+
+	[Attribute("120", UIWidgets.EditBox, "Mouse aircraft control: head-aim return-to-center rate (deg/s) while the mouse is flying the plane. 0 leaves the view where freelook left it.")]
+	protected float m_fMouseLookReturnRate;
+
 	protected IEntity m_Owner;
 	protected InputManager m_InputMgr;
 	protected SCR_BaseCompartmentManagerComponent m_CompartmentMgr;
@@ -53,6 +65,16 @@ class PFC_FlightController : ScriptGameComponent
 	// while releasing a key holds. Only updated while input is nonzero — at zero the
 	// latched mode decides between hold (digital) and recenter (analog).
 	protected bool m_bPitchInputAnalog;
+
+	protected float m_fMouseStickPitch;
+	protected float m_fMouseStickRoll;
+	protected float m_fMouseDbgPitch;
+	protected float m_fMouseDbgRoll;
+	protected bool m_bMouseFlightWasActive;
+	protected bool m_bMouseFreelookLatch;
+	protected bool m_bFreelookTogglePrev;
+	protected IEntity m_HeadAimingChar;
+	protected CharacterHeadAimingComponent m_HeadAiming;
 
 	override void OnPostInit(IEntity owner)
 	{
@@ -97,6 +119,10 @@ class PFC_FlightController : ScriptGameComponent
 		m_fPitchInput = 0;
 		m_fRollInput = 0;
 		m_fYawInput = 0;
+		m_fMouseStickPitch = 0;
+		m_fMouseStickRoll = 0;
+		m_bMouseFlightWasActive = false;
+		m_bMouseFreelookLatch = false;
 	}
 
 	protected bool IsPilotSlot(BaseCompartmentManagerComponent mgr, int slotID, int managerId)
@@ -127,6 +153,7 @@ class PFC_FlightController : ScriptGameComponent
 			m_fPitchInput = MoveTowards(m_fPitchInput, 0, GetPitchSlewRate(m_fPitchInput, 0) * timeSlice);
 			m_fRollInput  = MoveTowards(m_fRollInput,  0, rollMaxDelta);
 			m_fYawInput   = MoveTowards(m_fYawInput,   0, yawMaxDelta);
+			m_bMouseFlightWasActive = false;
 		}
 		else
 		{
@@ -140,29 +167,52 @@ class PFC_FlightController : ScriptGameComponent
 			if (!PFC_PilotUtil.IsFlightInputSuppressed("Airplane_Yaw"))
 				yaw = m_InputMgr.GetActionValue("Airplane_Yaw");
 
-			if (Math.AbsFloat(pitch) > 0.01)
+			bool mouseFlight = IsMouseFlightActive();
+			if (mouseFlight && !m_bMouseFlightWasActive)
 			{
-				// Fractional values can only come from an analog device — key filters yield exact
-				// 0/±1 — so partial stick deflection never reaches the persistent integrator even
-				// if the reported input type is wrong.
-				float mag = Math.AbsFloat(pitch);
-				bool fractional = (mag - Math.Floor(mag)) > 0.02 && (Math.Ceil(mag) - mag) > 0.02;
-				m_bPitchInputAnalog = fractional || m_InputMgr.GetActionInputType("Airplane_Pitch") != EActionValueType.DIGITAL;
+				m_fMouseStickPitch = m_fPitchInput;
+				m_fMouseStickRoll = m_fRollInput;
 			}
+			m_bMouseFlightWasActive = mouseFlight;
 
-			if (m_bPersistentPitch && !m_bPitchInputAnalog)
+			if (mouseFlight)
 			{
-				float travel = timeSlice / Math.Max(m_fPersistentPitchSeconds, 0.1);
-				float cap = m_fPitchInputScale;
-				m_fPitchInput = Math.Clamp(m_fPitchInput + Math.Clamp(pitch, -1, 1) * travel * cap, -cap, cap);
+				// keys nudge the same virtual stick the mouse holds (heli cyclic behavior)
+				float keyTravel = timeSlice / Math.Max(m_fPersistentPitchSeconds, 0.1);
+				m_fMouseStickPitch = Math.Clamp(m_fMouseStickPitch + Math.Clamp(pitch, -1, 1) * keyTravel * m_fPitchInputScale, -m_fPitchInputScale, m_fPitchInputScale);
+				m_fMouseStickRoll = Math.Clamp(m_fMouseStickRoll + Math.Clamp(roll, -1, 1) * m_fControlRate * timeSlice, -1, 1);
+				// slew toward the mouse stick so surfaces (and the pilot hand anim) move at a bounded,
+				// per-axis-uniform rate; the variant high-IAS pitch falloff still caps pitch on top
+				float mousePitchRate = Math.Min(m_fMouseStickSlewRate, GetPitchSlewRate(m_fPitchInput, m_fMouseStickPitch));
+				m_fPitchInput = MoveTowards(m_fPitchInput, m_fMouseStickPitch, mousePitchRate * timeSlice);
+				m_fRollInput = MoveTowards(m_fRollInput, m_fMouseStickRoll, m_fMouseStickSlewRate * timeSlice);
 			}
 			else
 			{
-				float pitchTarget = Math.Clamp(pitch, -1, 1) * m_fPitchInputScale;
-				m_fPitchInput = MoveTowards(m_fPitchInput, pitchTarget, GetPitchSlewRate(m_fPitchInput, pitchTarget) * timeSlice);
-			}
+				if (Math.AbsFloat(pitch) > 0.01)
+				{
+					// Fractional values can only come from an analog device — key filters yield exact
+					// 0/±1 — so partial stick deflection never reaches the persistent integrator even
+					// if the reported input type is wrong.
+					float mag = Math.AbsFloat(pitch);
+					bool fractional = (mag - Math.Floor(mag)) > 0.02 && (Math.Ceil(mag) - mag) > 0.02;
+					m_bPitchInputAnalog = fractional || m_InputMgr.GetActionInputType("Airplane_Pitch") != EActionValueType.DIGITAL;
+				}
 
-			m_fRollInput = MoveTowards(m_fRollInput, Math.Clamp(roll, -1, 1), rollMaxDelta);
+				if (m_bPersistentPitch && !m_bPitchInputAnalog)
+				{
+					float travel = timeSlice / Math.Max(m_fPersistentPitchSeconds, 0.1);
+					float cap = m_fPitchInputScale;
+					m_fPitchInput = Math.Clamp(m_fPitchInput + Math.Clamp(pitch, -1, 1) * travel * cap, -cap, cap);
+				}
+				else
+				{
+					float pitchTarget = Math.Clamp(pitch, -1, 1) * m_fPitchInputScale;
+					m_fPitchInput = MoveTowards(m_fPitchInput, pitchTarget, GetPitchSlewRate(m_fPitchInput, pitchTarget) * timeSlice);
+				}
+
+				m_fRollInput = MoveTowards(m_fRollInput, Math.Clamp(roll, -1, 1), rollMaxDelta);
+			}
 
 			m_fYawInput = MoveTowards(m_fYawInput, Math.Clamp(yaw, -1, 1), yawMaxDelta);
 
@@ -220,6 +270,97 @@ class PFC_FlightController : ScriptGameComponent
 		}
 	}
 
+	bool IsMouseFlightActive()
+	{
+		if (!m_bLocalPilotActive || !m_InputMgr)
+			return false;
+		if (!m_InputMgr.IsUsingMouseAndKeyboard())
+			return false;
+		if (!CharacterControllerComponent.GetMouseControlAircraft())
+			return false;
+		// MouseXRel/MouseYRel are context-free — without this the map/menu cursor would fly the plane
+		MenuManager menus = GetGame().GetMenuManager();
+		if (menus && (menus.IsAnyMenuOpen() || menus.IsAnyDialogOpen()))
+			return false;
+		SCR_MapEntity mapEnt = SCR_MapEntity.GetMapInstance();
+		if (mapEnt && mapEnt.IsOpen())
+			return false;
+		return !IsMouseFlightSuppressed();
+	}
+
+	// Variant hook (JetFlightCore autopilot etc.): true releases the mouse back to freelook.
+	protected bool IsMouseFlightSuppressed()
+	{
+		return false;
+	}
+
+	bool IsMouseFreelookActive()
+	{
+		if (m_bMouseFreelookLatch)
+			return true;
+		return m_InputMgr.GetActionValue("Freelook") > 0.1;
+	}
+
+	// Per-frame (NOT per sim step — MouseXRel/MouseYRel are per-frame motion values,
+	// physics substeps would integrate the same delta twice). Called from EOnFrame.
+	void UpdateMouseFlight(float timeSlice)
+	{
+		if (m_RplComponent && !m_RplComponent.IsOwner())
+			return;
+		if (!IsMouseFlightActive())
+		{
+			m_bMouseFreelookLatch = false;
+			m_bFreelookTogglePrev = false;
+			m_bMouseFlightWasActive = false;
+			return;
+		}
+
+		bool toggle = m_InputMgr.GetActionValue("FreelookToggle") > 0.5;
+		if (toggle && !m_bFreelookTogglePrev)
+			m_bMouseFreelookLatch = !m_bMouseFreelookLatch;
+		m_bFreelookTogglePrev = toggle;
+
+		if (IsMouseFreelookActive())
+			return;
+
+		// AnalogRelative actions report the per-frame mouse delta (ManualCameraRotateYaw pattern)
+		float deltaPitch = m_InputMgr.GetActionValue("Airplane_MousePitch");
+		float deltaRoll = m_InputMgr.GetActionValue("Airplane_MouseRoll");
+		m_fMouseDbgPitch = deltaPitch;
+		m_fMouseDbgRoll = deltaRoll;
+
+		m_fMouseStickPitch = Math.Clamp(m_fMouseStickPitch + deltaPitch * m_fMouseFlightPitchSens, -m_fPitchInputScale, m_fPitchInputScale);
+		m_fMouseStickRoll = Math.Clamp(m_fMouseStickRoll + deltaRoll * m_fMouseFlightRollSens, -1, 1);
+
+		m_InputMgr.ResetAction("MouseX");
+		m_InputMgr.SetActionValue("MouseX", 0);
+		m_InputMgr.ResetAction("MouseY");
+		m_InputMgr.SetActionValue("MouseY", 0);
+
+		RecenterHeadAim(timeSlice);
+	}
+
+	protected void RecenterHeadAim(float timeSlice)
+	{
+		if (m_fMouseLookReturnRate <= 0.01)
+			return;
+		IEntity ch = SCR_PlayerController.GetLocalControlledEntity();
+		if (ch != m_HeadAimingChar)
+		{
+			m_HeadAimingChar = ch;
+			m_HeadAiming = null;
+			if (ch)
+				m_HeadAiming = CharacterHeadAimingComponent.Cast(ch.FindComponent(CharacterHeadAimingComponent));
+		}
+		if (!m_HeadAiming)
+			return;
+		vector rot = m_HeadAiming.GetAimingRotationWanted();
+		float maxDelta = m_fMouseLookReturnRate * timeSlice;
+		rot[0] = MoveTowards(rot[0], 0, maxDelta);
+		rot[1] = MoveTowards(rot[1], 0, maxDelta);
+		m_HeadAiming.SetAimingRotationWanted(rot);
+	}
+
 	protected void DrawInputDebug(float pitch, float roll, float yaw, float thrAxis)
 	{
 		DbgUI.Begin("Flight Input");
@@ -230,6 +371,11 @@ class PFC_FlightController : ScriptGameComponent
 		DbgUI.Text(string.Format("yaw raw:    %1", yaw.ToString(5, 3)));
 		DbgUI.Text(string.Format("yaw out:    %1", m_fYawInput.ToString(5, 3)));
 		DbgUI.Text(string.Format("thr axis:   %1   throttle: %2", thrAxis.ToString(5, 3), m_fThrottle.ToString(5, 3)));
+		if (IsMouseFlightActive())
+		{
+			DbgUI.Text(string.Format("mouse stick: %1 / %2   freelook: %3", m_fMouseStickPitch.ToString(5, 3), m_fMouseStickRoll.ToString(5, 3), IsMouseFreelookActive().ToString()));
+			DbgUI.Text(string.Format("mouse delta: %1 / %2", m_fMouseDbgPitch.ToString(6, 4), m_fMouseDbgRoll.ToString(6, 4)));
+		}
 		DbgUI.End();
 	}
 

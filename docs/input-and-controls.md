@@ -96,6 +96,41 @@ In digital mode the pitch slew rates and any `GetPitchSlewRate` subclass overrid
 style assists should be disabled alongside it: they detect "hands-off" from the raw action value and would
 integrate trim against the held yoke.
 
+## Mouse aircraft control
+
+When the vanilla **Settings → Gameplay → Mouse aircraft control** option is on (and the player is using
+mouse & keyboard), the mouse flies the plane instead of free-looking — the same split the setting gives
+vanilla helicopters:
+
+- Mouse movement drives a **persistent virtual stick**: the deflection stays where you put it (helicopter
+  cyclic behavior), clamped to ±1 roll and ±`m_fPitchInputScale` pitch. ++w++/++s++/++a++/++d++ nudge the
+  same stick instead of springing back.
+- **Freelook (default ++alt++)**: hold to look around (the stick holds its deflection), tap to toggle the
+  mouse back to freelook until tapped again.
+- The camera returns to the nose at `m_fMouseLookReturnRate` deg/s while the mouse is flying (0 = leave the
+  view where freelook left it).
+- Yaw and throttle are unaffected; with the setting off (or on gamepad/joystick) nothing changes.
+
+No extra setup beyond the standard `PFC_FreeLookController` + `ForcedFreeLook 1` pilot slot — the freelook
+controller drops forced freelook while the mouse is flying. Mouse deltas come from two PFC-defined
+`AnalogRelative` actions in `CarContext`, `Airplane_MousePitch` / `Airplane_MouseRoll` (`mouse:y_rel`/`x_rel`
+halves — the `ManualCameraRotateYaw` pattern; the vanilla context-free `MouseXRel`/`MouseYRel` Motion actions
+are *running totals*, not deltas, and are not used). Like all input-config additions they merge at **cold
+engine start only**. Mouse flight pauses automatically while a menu, dialog, or the map is open, and while
+the Jet Flight Core autopilot is engaged.
+
+| Attribute | Default | Meaning |
+|---|---|---|
+| `m_fMouseFlightPitchSens` | 0.04 | Pitch stick deflection per `Airplane_MousePitch` unit (negative inverts) |
+| `m_fMouseFlightRollSens` | 0.04 | Roll stick deflection per `Airplane_MouseRoll` unit (negative inverts) |
+
+The mouse positions the virtual stick instantly, but the *published* input slews toward it at
+`m_fMouseStickSlewRate` (default 2.5/s, same for pitch and roll so the pilot hand moves uniformly;
+the variant high-IAS pitch falloff still caps pitch on top). Control surfaces and the hand animation
+therefore always move at an animatable rate no matter how fast the mouse flicks. The keyboard slew rates
+(`m_fPitchControlRate` / `m_fControlRate`) are not used in mouse mode.
+| `m_fMouseLookReturnRate` | 120 | Head-aim return-to-center rate (deg/s) while the mouse flies |
+
 ## Ground steering & key de-conflicting
 
 Because the airframe rides on `Wheeled_Base.et`, its native car controls collide with the flight keys.
@@ -113,7 +148,8 @@ the simulate phase, so writing it later is ignored) and:
 
 `PFC_FreeLookController` gives car-based aircraft the helicopter-style camera:
 
-- **Mouse & keyboard** - the mouse always free-looks, no modifier needed.
+- **Mouse & keyboard** - the mouse free-looks, no modifier needed (unless the *Mouse aircraft control*
+  gameplay setting is on — then the mouse flies the plane and Freelook works as on gamepad, see above).
 - **Gamepad** - the camera stays locked to the nose. Hold the vanilla **Freelook** modifier (right bumper)
   and the right stick pans the camera instead of flying; release and the camera *stays* where you left it;
   tap the modifier to recenter. While the modifier is held the flight controller ignores right-stick

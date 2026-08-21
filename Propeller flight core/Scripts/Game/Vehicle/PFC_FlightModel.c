@@ -518,7 +518,10 @@ class PFC_FlightModel : ScriptGameComponent
 	override void EOnFrame(IEntity owner, float timeSlice)
 	{
 		if (m_FlightController)
+		{
+			m_FlightController.UpdateMouseFlight(timeSlice);
 			m_FlightController.ApplyGroundSteering();
+		}
 
 		UpdatePropellerVisuals(timeSlice);
 		DrawDebug(owner, timeSlice);

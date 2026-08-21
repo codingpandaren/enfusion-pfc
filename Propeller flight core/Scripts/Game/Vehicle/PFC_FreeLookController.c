@@ -8,10 +8,12 @@ class PFC_FreeLookController : ScriptGameComponent
 	protected bool m_bLocalSeated;
 	protected bool m_bApplied;
 	protected bool m_bAppliedValue;
+	protected PFC_FlightController m_Flight;
 
 	override void OnPostInit(IEntity owner)
 	{
 		super.OnPostInit(owner);
+		m_Flight = PFC_FlightController.Cast(owner.FindComponent(PFC_FlightController));
 		EventHandlerManagerComponent ev = EventHandlerManagerComponent.Cast(owner.FindComponent(EventHandlerManagerComponent));
 		if (ev)
 		{
@@ -73,7 +75,16 @@ class PFC_FreeLookController : ScriptGameComponent
 		if (!ctrl)
 			return;
 
-		bool desired = im.IsUsingMouseAndKeyboard() || !CharacterControllerComponent.GetGamepadControlAircraft();
+		bool mouseFlying = false;
+		if (m_Flight)
+			mouseFlying = m_Flight.IsMouseFlightActive() && !m_Flight.IsMouseFreelookActive();
+
+		bool desired;
+		if (im.IsUsingMouseAndKeyboard())
+			desired = !mouseFlying;
+		else
+			desired = !CharacterControllerComponent.GetGamepadControlAircraft();
+
 		if (!m_bApplied || desired != m_bAppliedValue)
 		{
 			ctrl.SetForcedFreeLook(desired);
