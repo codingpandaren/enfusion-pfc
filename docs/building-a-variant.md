@@ -56,6 +56,9 @@ The core deliberately stops at flight. Anything else is a component you add to y
 Follow the core's networking patterns when you do: owner-authoritative changes via RPC, and guard per-tick
 RPCs / MP-signal writes on a valid Rpl id (see [Networking & MP](networking.md#boot-window-guard)).
 
+To make the finished plane requestable at PFC's aircraft service pads - and repaired, refueled and
+rearmed on them - see [Request Pads & Servicing](request-pads.md).
+
 ## Extending the flight model itself
 
 If your aircraft needs different *physics* — not just extra systems — do **not** copy or `modded class` the

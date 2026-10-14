@@ -1,0 +1,17 @@
+SCR_EditorModeEntity : "{E56F54E533ACE527}Prefabs/Editor/Modes/EditorModeBase.et" {
+ ID "518A34314C7CB324"
+ components {
+  SCR_ContentBrowserEditorComponent "{597071D8310A282F}" {
+   m_aContentBrowserTabStates + {
+    SCR_EditorContentBrowserSaveStateDataUI "{69A8A34000008600}" {
+     m_iSavedLabels {
+      VEHICLE_AIRPLANE
+     }
+     m_BrowserStateUIInfo SCR_UIInfo "{69A8A34000008601}" {
+      Icon "{3F9E7F3B4DF7593E}UI/Textures/Editor/ContentBrowser/ContentBrowser_Type_Airplane.edds"
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,17 @@
+MetaFileClass {
+ Name "{69A8A340000C0005}UI/layouts/Menus/SettingsMenu/PFC_FlightControlsSettings.layout"
+ Configurations {
+  LayoutResourceClass PC {
+  }
+  LayoutResourceClass XBOX_ONE : PC {
+  }
+  LayoutResourceClass XBOX_SERIES : PC {
+  }
+  LayoutResourceClass PS4 : PC {
+  }
+  LayoutResourceClass PS5 : PC {
+  }
+  LayoutResourceClass HEADLESS : PC {
+  }
+ }
+}

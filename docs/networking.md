@@ -28,13 +28,45 @@ owner client ── Rpc(RpcSrv_ReceiveInputs, pitch, roll, yaw, throttle) ──
 ## Movement replication
 
 `PFC_NwkMovementComponent` replicates the authoritative transform + velocity to proxies so remote viewers see
-smooth motion. Proxies don't simulate aero; they interpolate this state and drive their own propeller visuals
-from the replicated, normalized engine-RPM signal.
+smooth motion. Proxies don't simulate aero; they render from a **timestamped snapshot buffer** and drive their
+own propeller visuals from the replicated, normalized engine-RPM signal.
+
+How the proxy path works (snapshot interpolation, not dead reckoning):
+
+- The owner stamps each state broadcast with its **sender time**; the receiver estimates the sender-clock
+  offset by tracking the least-delayed packets (slow upward drift absorbs clock skew and route changes) and
+  measures arrival jitter with an EMA.
+- Proxies render the aircraft a **playout delay** in the past (`1.5 × send interval + 3 × jitter`, clamped to
+  `m_fPlayoutMinMs..m_fPlayoutMaxMs`), interpolating **between two buffered snapshots**: Hermite position
+  (positions + velocities as tangents, so turns stay curved), quaternion lerp for orientation. Because the
+  render point sits behind the newest data, network jitter disappears into the buffer instead of becoming
+  rubberbanding — remote planes are a small constant time offset, not a jumping target.
+- If the buffer runs dry (packet-loss burst), the proxy extrapolates on velocity up to
+  `m_fMaxExtrapolationSec`, then fades velocity to zero instead of freezing.
+- Discontinuities (loss recovery, ownership handoff) are folded into a **decaying visual offset**
+  (`m_fPositionCorrectionRate` / `m_fRotationCorrectionRate`, 1/s) — position and rotation blend back
+  smoothly. Only offsets beyond `m_fHardSnapThresholdMeters` / `m_fHardSnapRotationDeg` hard-snap.
+- `F6 → Prop Flight → Network interp debug` shows per-plane buffer depth, delay/jitter estimates, playout
+  delay, extrapolation state, and absorb/snap counters.
+
+The state RPC carries the sender timestamp, so **all peers must run the same PFC version** after an update to
+this component (mismatched RPC signatures fail to marshal).
 
 ## Instrument signals
 
-The owner publishes gauge signals via `SignalsManagerComponent`; they replicate to all peers, so cockpit
-instruments and HUDs on every client read them for free.
+The owner publishes gauge signals via `SignalsManagerComponent` for its **own** cockpit instruments and HUD.
+
+!!! danger "Replication is server → client only"
+    Per the engine's replication model (see the BI Replication Overview), state only ever flows
+    **server → clients**. A signal written on a pilot-owned client exists on that client alone — it does
+    NOT replicate to the server or to other clients, no matter how it was registered. Anything another
+    peer must see has to travel through a server-routed channel (owner → `RplRcver.Server` RPC →
+    `RplRcver.Broadcast`, or the movement-state snapshot) and be written into a **local** signal on each
+    receiving peer.
+
+    This is why control-surface / flap / airbrake visuals ride the `PFC_NwkMovementComponent` snapshot
+    (pilot control state is packed into the state RPC, interpolated in the snapshot buffer, and every
+    proxy writes the surface signals locally) instead of `AddOrFindMPSignal`.
 
 !!! danger "Use the right compression function"
     `AddOrFindMPSignal(..., SignalCompressionFunc.X)` - the compression must match the value range:
@@ -42,7 +74,7 @@ instruments and HUDs on every client read them for free.
     - **Raw units** (airspeed km/h, altitude m, climb m/s, pitch/bank/heading deg, G-load): use `None`.
       `Range01` would clamp them to `[0,1]` over the wire, pinning every receiver's gauge at `1`.
     - **Normalized 0..1** (throttle, normalized RPM): `Range01` is fine.
-    - **Angles** (control-surface deflection): `RotDEG`.
+    - **Angles**: `RotDEG`.
 
 ## Boot-window guard
 

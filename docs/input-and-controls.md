@@ -1,6 +1,6 @@
 # Input & Controls
 
-PFC defines the shared **`Airplane_*` action set** and the **"Airplane" tab** in the Controls menu. The
+PFC defines the shared **`PFC_*` action set** and the **"Airplane" tab** in the Controls menu. The
 actions merge into the vanilla `CarContext`, so they're active whenever the player is the active pilot of a
 car-based aircraft. Downstream flight mods (Jet Flight Core and the aircraft built on it or on PFC) read the
 same actions, so every fixed-wing aircraft shares one binding set and one controls tab.
@@ -14,12 +14,12 @@ Defined in `Configs/System/chimeraInputCommon.conf`. These are the actions the P
 
 | Action | Keyboard | Gamepad | Joystick |
 |---|---|---|---|
-| `Airplane_Pitch` | ++w++/++s++ | right stick Y | `axis1` (push = nose down) |
-| `Airplane_Roll` | ++a++/++d++ | right stick X | `axis0` |
-| `Airplane_Yaw` | ++q++/++e++ | left stick X | `axis5` (twist) |
-| `Airplane_ThrottleUp` | ++shift++ | left stick up | `button4` (hold) |
-| `Airplane_ThrottleDown` | ++ctrl++ | left stick down | `button5` (hold) |
-| `Airplane_ThrottleAxis` | - | - | throttle lever (second device, `axis2`) |
+| `PFC_Pitch` | ++w++/++s++ | right stick Y | `axis1` (push = nose down) |
+| `PFC_Roll` | ++a++/++d++ | right stick X | `axis0` |
+| `PFC_Yaw` | ++q++/++e++ | left stick X | `axis5` (twist) |
+| `PFC_ThrottleUp` | ++shift++ | left stick up | `button4` (hold) |
+| `PFC_ThrottleDown` | ++ctrl++ | left stick down | `button5` (hold) |
+| `PFC_ThrottleAxis` | - | - | throttle lever (second device, `axis2`) |
 
 The gamepad layout mirrors the vanilla **helicopter** scheme - right stick is pitch/roll, left stick is
 throttle (vertical) and rudder (horizontal) - so a heli player is immediately at home, and the triggers and
@@ -36,14 +36,15 @@ so every aircraft answers to the same keys and shows up in the same tab:
 
 | Action | Purpose |
 |---|---|
-| `Airplane_GearToggle` | Landing gear up/down |
-| `Airplane_Flaps` | Flaps toggle |
-| `Airplane_Airbrake` | Airbrake toggle |
-| `Airplane_ReverseThrust` | Reverse thrust / beta range |
-| `Airplane_TrimUp` / `Airplane_TrimDown` / `Airplane_TrimReset` | Pitch trim |
-| `Airplane_WheelBrake` / `Airplane_WheelBrakePersistent` | Wheel brake (hold / parking) |
-| `Airplane_EngineStart` / `Airplane_EngineStop` | Engine start/stop |
-| `Airplane_LightsTaxiToggle` / `Airplane_LightsLandingToggle` | Taxi / landing lights |
+| `PFC_GearToggle` | Landing gear up/down |
+| `PFC_Flaps` | Flaps toggle |
+| `PFC_Airbrake` | Airbrake toggle |
+| `PFC_FCSOverride` | FCS override toggle (direct law / limiters off) |
+| `PFC_ReverseThrust` | Reverse thrust / beta range |
+| `PFC_TrimUp` / `PFC_TrimDown` / `PFC_TrimReset` | Pitch trim |
+| `PFC_WheelBrake` / `PFC_WheelBrakePersistent` | Wheel brake (hold / parking) |
+| `PFC_EngineStart` / `PFC_EngineStop` | Engine start/stop |
+| `PFC_LightsTaxiToggle` / `PFC_LightsLandingToggle` | Taxi / landing lights |
 
 ## The Airplane controls tab
 
@@ -88,7 +89,7 @@ pilot leaves the yoke where the aircraft flies level. Roll and yaw keep the spri
 Persistent pitch applies to **digital (key) input only**. Analog devices — gamepad and joystick axes, or a
 mouse axis the player binds to pitch — keep the normal spring-back behavior even with the flag enabled:
 stick deflection maps to yoke position through the usual slew rates, and centering the stick recenters the
-yoke. The controller classifies the active input each frame via `GetActionInputType("Airplane_Pitch")`
+yoke. The controller classifies the active input each frame via `GetActionInputType("PFC_Pitch")`
 (`DIGITAL` vs the analog types) and latches the mode of the last nonzero input, so releasing a key holds
 the yoke while releasing a stick recenters it — and the split follows user rebinding automatically.
 
@@ -113,7 +114,7 @@ vanilla helicopters:
 
 No extra setup beyond the standard `PFC_FreeLookController` + `ForcedFreeLook 1` pilot slot — the freelook
 controller drops forced freelook while the mouse is flying. Mouse deltas come from two PFC-defined
-`AnalogRelative` actions in `CarContext`, `Airplane_MousePitch` / `Airplane_MouseRoll` (`mouse:y_rel`/`x_rel`
+`AnalogRelative` actions in `CarContext`, `PFC_MousePitch` / `PFC_MouseRoll` (`mouse:y_rel`/`x_rel`
 halves — the `ManualCameraRotateYaw` pattern; the vanilla context-free `MouseXRel`/`MouseYRel` Motion actions
 are *running totals*, not deltas, and are not used). Like all input-config additions they merge at **cold
 engine start only**. Mouse flight pauses automatically while a menu, dialog, or the map is open, and while
@@ -121,8 +122,8 @@ the Jet Flight Core autopilot is engaged.
 
 | Attribute | Default | Meaning |
 |---|---|---|
-| `m_fMouseFlightPitchSens` | 0.04 | Pitch stick deflection per `Airplane_MousePitch` unit (negative inverts) |
-| `m_fMouseFlightRollSens` | 0.04 | Roll stick deflection per `Airplane_MouseRoll` unit (negative inverts) |
+| `m_fMouseFlightPitchSens` | 0.04 | Pitch stick deflection per `PFC_MousePitch` unit (negative inverts) |
+| `m_fMouseFlightRollSens` | 0.04 | Roll stick deflection per `PFC_MouseRoll` unit (negative inverts) |
 
 The mouse positions the virtual stick instantly, but the *published* input slews toward it at
 `m_fMouseStickSlewRate` (default 2.5/s, same for pitch and roll so the pilot hand moves uniformly;
@@ -140,7 +141,7 @@ the simulate phase, so writing it later is ignored) and:
 - **Zeroes `CarThrust`** - otherwise ++w++ revs the car engine and you hear the leftover turbine spin up.
 - **Zeroes `CarBrake`** - otherwise ++s++ (pitch back) grabs the wheel brake.
 - **Zeroes `CarShift`** - otherwise ++q++/++e++ (yaw) shift the gearbox.
-- **Injects nose-wheel steering** - writes the smoothed `Airplane_Yaw` value into `CarSteering` (scaled by
+- **Injects nose-wheel steering** - writes the smoothed `PFC_Yaw` value into `CarSteering` (scaled by
   `m_fGroundSteerScale`, default `-1.0`), so ++q++/++e++ steer the nose wheel on the ground while ++a++/++d++
   stay roll-only. Set `m_fGroundSteerScale` to `0` to disable (then ++a++/++d++ steer as vanilla).
 

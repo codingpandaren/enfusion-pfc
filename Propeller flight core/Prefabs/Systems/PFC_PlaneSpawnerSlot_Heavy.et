@@ -1,0 +1,10 @@
+GenericEntity : "{E59D208A414AC0F4}Prefabs/Systems/Compositions/EntitySpawnerSlot/EntitySpawnerSlot_Vehicle_base.et" {
+ ID "5CB0DBDC19A6F2C6"
+ components {
+  SCR_EntitySpawnerSlotComponent "{5D2262B11A789A08}" {
+   m_eSlotType VEHICLE_LARGE
+   m_vMinBounds -17 0 -18
+   m_vMaxBounds 17 13 18
+  }
+ }
+}

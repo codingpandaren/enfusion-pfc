@@ -1,0 +1,26 @@
+GenericEntity : "{69A8A34000008201}Prefabs/Compositions/Slotted/SlotFlatLarge/PlaneService_L_USSR_01.et" {
+ ID "5282DCB5DFC8538F"
+ components {
+  SCR_EditableEntityComponent "{69A8A34000008300}" : "{2DB068D7C4410B5E}Prefabs/Editor/Components/SlotFlatLarge_SCR_EditableEntityComponent.ct" {
+   m_UIInfo SCR_EditableEntityUIInfo "{5298E609432D192D}" {
+    Name "Aircraft Service Pad"
+    Icon "{C0EAB5128EF8D44A}UI/Textures/Editor/EditableEntity_Icon_Airplane.edds"
+    m_Image "{FE4FEB9319E24AAA}UI/Textures/EditorPreviews/Auto/Props/Military/Compositions/USSR/E_VehicleService_USSR_Large.edds"
+    m_sFaction "USSR"
+    m_aAuthoredLabels {
+     ENTITYTYPE_COMPOSITION TRAIT_MANAGEMENT_VEHICLE TRAIT_SUPPLYSTORAGE_LARGE TRAIT_REPAIRING TRAIT_REFUELING SLOT_FLAT_LARGE FACTION_USSR TRAIT_SERVICE SERVICE_REPAIR SERVICE_FUEL SERVICE_HELIPAD TRAIT_ARSENAL TRAIT_VEHICLE_REARMING
+    }
+    m_EntityBudgetCost {
+     SCR_EntityBudgetValue "{69A8A34000008303}" {
+      m_BudgetType CAMPAIGN
+      m_Value 400
+     }
+     SCR_EntityBudgetValue "{69A8A34000008304}" {
+      m_BudgetType RANK_SERGEANT
+      m_Value 3
+     }
+    }
+   }
+  }
+ }
+}

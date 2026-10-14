@@ -1,0 +1,17 @@
+MetaFileClass {
+ Name "{69A8A340000C0001}Configs/System/ControlSchemes/Joystick/PFC_VKB_GladiatorNXT.conf"
+ Configurations {
+  CONFResourceClass PC {
+  }
+  CONFResourceClass XBOX_ONE : PC {
+  }
+  CONFResourceClass XBOX_SERIES : PC {
+  }
+  CONFResourceClass PS4 : PC {
+  }
+  CONFResourceClass PS5 : PC {
+  }
+  CONFResourceClass HEADLESS : PC {
+  }
+ }
+}

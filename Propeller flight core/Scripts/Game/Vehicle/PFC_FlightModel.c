@@ -4,6 +4,7 @@ modded enum SCR_DebugMenuID
 	PFC_DEBUG_DRAW,
 	PFC_DEBUG_APPROACH,
 	PFC_DEBUG_INPUT,
+	PFC_DEBUG_NWK,
 }
 
 [ComponentEditorProps(category: "GameScripted/PropFlightCore", description: "Flight model. Per-surface lift/drag + thrust via rigid body impulses. Runs on owner + server; proxies receive state via PFC_NwkMovementComponent.")]
@@ -24,6 +25,9 @@ class PFC_FlightModel : ScriptGameComponent
 
 	[Attribute("25", UIWidgets.EditBox, "Max control surface deflection (deg).")]
 	protected float m_fMaxControlDeflectionDeg;
+
+	[Attribute("30", UIWidgets.EditBox, "Nose-wheel steering visual: angle (deg) at full input, fed into the PFC_SteerVis signal. Match the wheel sim MaxSteeringAngle. Negative flips direction.")]
+	protected float m_fSteerVisMaxDeg;
 
 	[Attribute("40", UIWidgets.EditBox, "Flap deflection when deployed (deg). The minimal core has no flap controller, so flaps stay retracted unless a variant drives a FLAPS surface.")]
 	protected float m_fFlapDeflectionDeg;
@@ -75,6 +79,28 @@ class PFC_FlightModel : ScriptGameComponent
 	[Attribute("0.5", UIWidgets.EditBox, "Radar altimeter smoothing tau (seconds). Cuts treetop/vehicle spike noise.")]
 	protected float m_fAltAGLSmoothingTau;
 
+	[Attribute("0", UIWidgets.EditBox, "Gross mass (kg) at full fuel — must match the prefab RigidBody Mass. Empty-tank mass is this minus the full fuel weight. 0 disables fuel-load mass coupling.", category: "Fuel")]
+	protected float m_fGrossMassFull;
+
+	[Attribute("0.8", UIWidgets.EditBox, "Fuel density (kg/L). Avgas ≈ 0.72, Jet-A / kerosene ≈ 0.8.", category: "Fuel")]
+	protected float m_fFuelDensity;
+
+	[Attribute("25", UIWidgets.EditBox, "Re-apply mass only after the fuel load changes by this many liters (skips redundant SetMass calls).", category: "Fuel")]
+	protected float m_fMassUpdateThresholdL;
+
+	protected SCR_FuelManagerComponent m_FuelManager;
+	protected float m_fLastMassFuel;
+	protected bool m_bMassInit;
+	protected float m_fExternalMassOffset;
+
+	void SetExternalMassOffset(float kg)
+	{
+		if (Math.AbsFloat(kg - m_fExternalMassOffset) < 0.1)
+			return;
+		m_fExternalMassOffset = kg;
+		m_bMassInit = false;
+	}
+
 	protected float m_fAltAGLSmoothed;
 
 	protected ref LocalWeatherSituation m_WeatherSituation;
@@ -86,6 +112,12 @@ class PFC_FlightModel : ScriptGameComponent
 	protected float m_fWindRefreshTimer;
 	protected float m_fGustTime;
 	protected const float WIND_REFRESH_INTERVAL = 0.5;
+
+	[Attribute("1", UIWidgets.CheckBox, "Server: skip aero force integration for client-piloted planes — their transform comes from the owner via replication, so server-computed forces were discarded anyway. Inputs, flaps and engine spool still tick for handoff continuity.")]
+	protected bool m_bServerLiteSim;
+
+	[Attribute("1", UIWidgets.CheckBox, "Authority: skip the whole simulation for unmanned, stationary, throttle-idle planes (parked fleet). Wakes on crew entry, throttle, or any motion (impacts included).")]
+	protected bool m_bIdleSleep;
 
 	[Attribute("", UIWidgets.Object, "Aerodynamic surface definitions.")]
 	protected ref array<ref PFC_AeroSurfaceDef> m_aSurfaceDefs;
@@ -100,6 +132,9 @@ class PFC_FlightModel : ScriptGameComponent
 	protected PFC_FlightController m_FlightController;
 	protected RplComponent m_RplComponent;
 	protected SignalsManagerComponent m_SignalsMgr;
+	protected PFC_NwkMovementComponent m_NwkMovement;
+	protected int m_iSigSteerVis = -1;
+	protected float m_fSteerVisState;
 	protected SCR_DamageManagerComponent m_DamageManager;
 
 	protected int m_iSigAirSpeed   = -1;
@@ -141,6 +176,9 @@ class PFC_FlightModel : ScriptGameComponent
 	protected vector m_vPrevVelSim;
 	protected bool m_bPrevVelSimValid;
 
+	protected int m_iOccupantCount;
+	protected bool m_bSimSleeping;
+
 	override void OnPostInit(IEntity owner)
 	{
 		super.OnPostInit(owner);
@@ -150,6 +188,70 @@ class PFC_FlightModel : ScriptGameComponent
 		RegisterDiagMenu();
 		if (m_bDebugDraw)
 			DiagMenu.SetValue(SCR_DebugMenuID.PFC_DEBUG_DRAW, 1);
+
+		EventHandlerManagerComponent ev = EventHandlerManagerComponent.Cast(owner.FindComponent(EventHandlerManagerComponent));
+		if (ev)
+		{
+			ev.RegisterScriptHandler("OnCompartmentEntered", this, OnSleepCompartmentEntered, false);
+			ev.RegisterScriptHandler("OnCompartmentLeft", this, OnSleepCompartmentLeft, false);
+		}
+	}
+
+	override void OnDelete(IEntity owner)
+	{
+		EventHandlerManagerComponent ev = EventHandlerManagerComponent.Cast(owner.FindComponent(EventHandlerManagerComponent));
+		if (ev)
+		{
+			ev.RemoveScriptHandler("OnCompartmentEntered", this, OnSleepCompartmentEntered);
+			ev.RemoveScriptHandler("OnCompartmentLeft", this, OnSleepCompartmentLeft);
+		}
+		super.OnDelete(owner);
+	}
+
+	protected void OnSleepCompartmentEntered(IEntity vehicle, BaseCompartmentManagerComponent mgr, IEntity occupant, int managerId, int slotID)
+	{
+		m_iOccupantCount++;
+	}
+
+	protected void OnSleepCompartmentLeft(IEntity vehicle, BaseCompartmentManagerComponent mgr, IEntity occupant, int managerId, int slotID)
+	{
+		m_iOccupantCount--;
+		if (m_iOccupantCount < 0)
+			m_iOccupantCount = 0;
+	}
+
+	bool IsSimSleeping()
+	{
+		return m_bSimSleeping;
+	}
+
+	// consumers with engine on/off state tighten this (a running engine must keep simulating)
+	protected bool CanSleepSim(float throttle)
+	{
+		return throttle <= 0.01;
+	}
+
+	protected bool UpdateSimSleep(IEntity owner, Physics physics, float throttle)
+	{
+		m_bSimSleeping = false;
+		if (!m_bIdleSleep)
+			return false;
+		if (!Replication.IsServer())
+			return false;
+		if (m_RplComponent && !m_RplComponent.IsOwner())
+			return false;
+		if (m_iOccupantCount > 0)
+			return false;
+		if (!CanSleepSim(throttle))
+			return false;
+		vector v = physics.GetVelocity();
+		if (!IsFiniteVec(v) || v.LengthSq() > 0.04)
+			return false;
+		vector av = physics.GetAngularVelocity();
+		if (!IsFiniteVec(av) || av.LengthSq() > 0.01)
+			return false;
+		m_bSimSleeping = true;
+		return true;
 	}
 
 	protected static void RegisterDiagMenu()
@@ -167,8 +269,10 @@ class PFC_FlightModel : ScriptGameComponent
 	{
 		m_FlightController = PFC_FlightController.Cast(owner.FindComponent(PFC_FlightController));
 		m_RplComponent = RplComponent.Cast(owner.FindComponent(RplComponent));
+		m_NwkMovement = PFC_NwkMovementComponent.Cast(owner.FindComponent(PFC_NwkMovementComponent));
 		m_SignalsMgr = SignalsManagerComponent.Cast(owner.FindComponent(SignalsManagerComponent));
 		m_DamageManager = SCR_DamageManagerComponent.Cast(owner.FindComponent(SCR_DamageManagerComponent));
+		m_FuelManager = SCR_FuelManagerComponent.Cast(owner.FindComponent(SCR_FuelManagerComponent));
 
 		if (m_SignalsMgr)
 		{
@@ -191,10 +295,11 @@ class PFC_FlightModel : ScriptGameComponent
 				m_aPropAngles.Insert(0);
 				m_aEngineRPMs.Insert(0);
 			}
-			m_iSigElevator  = m_SignalsMgr.AddOrFindMPSignal("ElevatorAngle",  0.05, 30, 0, SignalCompressionFunc.RotDEG);
-			m_iSigRudder    = m_SignalsMgr.AddOrFindMPSignal("RudderAngle",    0.05, 30, 0, SignalCompressionFunc.RotDEG);
-			m_iSigAileron   = m_SignalsMgr.AddOrFindMPSignal("AileronAngle",   0.05, 30, 0, SignalCompressionFunc.RotDEG);
-			m_iSigFlap      = m_SignalsMgr.AddOrFindMPSignal("FlapAngle",      0.05, 30, 0, SignalCompressionFunc.RotDEG);
+			m_iSigElevator  = m_SignalsMgr.AddOrFindSignal("ElevatorAngle");
+			m_iSigRudder    = m_SignalsMgr.AddOrFindSignal("RudderAngle");
+			m_iSigAileron   = m_SignalsMgr.AddOrFindSignal("AileronAngle");
+			m_iSigFlap      = m_SignalsMgr.AddOrFindSignal("FlapAngle");
+			m_iSigSteerVis  = m_SignalsMgr.AddOrFindSignal("PFC_SteerVis");
 			m_iSigPitch     = m_SignalsMgr.AddOrFindMPSignal("pitch",          0.5,  30, 0, SignalCompressionFunc.None);
 			m_iSigBank      = m_SignalsMgr.AddOrFindMPSignal("bank",           0.5,  30, 0, SignalCompressionFunc.None);
 			m_iSigHeading   = m_SignalsMgr.AddOrFindMPSignal("heading",        0.5,  30, 0, SignalCompressionFunc.None);
@@ -253,6 +358,27 @@ class PFC_FlightModel : ScriptGameComponent
 		m_aSurfaceFlipSign.Insert(flipSign);
 	}
 
+	protected void UpdateFuelMass(Physics physics)
+	{
+		if (m_fGrossMassFull <= 0 || !m_FuelManager)
+			return;
+		float maxFuel = m_FuelManager.GetTotalMaxFuel();
+		if (maxFuel <= 0)
+			return;
+
+		float fuel = m_FuelManager.GetTotalFuel();
+		if (m_bMassInit && Math.AbsFloat(fuel - m_fLastMassFuel) < m_fMassUpdateThresholdL)
+			return;
+		m_bMassInit = true;
+		m_fLastMassFuel = fuel;
+
+		float dryMass = m_fGrossMassFull - maxFuel * m_fFuelDensity;
+		float mass = dryMass + fuel * m_fFuelDensity + m_fExternalMassOffset;
+		if (mass < 1)
+			mass = 1;
+		physics.SetMass(mass);
+	}
+
 	override void EOnSimulate(IEntity owner, float timeSlice)
 	{
 		Physics physics = owner.GetPhysics();
@@ -261,6 +387,8 @@ class PFC_FlightModel : ScriptGameComponent
 
 		if (m_RplComponent && !m_RplComponent.IsOwner() && !Replication.IsServer())
 			return;
+
+		UpdateFuelMass(physics);
 
 		float pitch = 0, roll = 0, yaw = 0, throttle = 0;
 		if (m_FlightController)
@@ -271,6 +399,11 @@ class PFC_FlightModel : ScriptGameComponent
 			yaw      = m_FlightController.GetYawInput();
 			throttle = m_FlightController.GetThrottle();
 		}
+
+		if (UpdateSimSleep(owner, physics, throttle))
+			return;
+
+		bool liteSim = m_bServerLiteSim && Replication.IsServer() && m_RplComponent && !m_RplComponent.IsOwner();
 
 		float maxDef = m_fMaxControlDeflectionDeg;
 
@@ -296,6 +429,13 @@ class PFC_FlightModel : ScriptGameComponent
 			if (m_aSurfaceFlipSign[i])
 				deflection = -deflection;
 			m_aSurfaces[i].SetFlapAngle(deflection);
+		}
+
+		if (liteSim)
+		{
+			bool destroyedLite = (m_DamageManager && m_DamageManager.GetState() == EDamageState.DESTROYED);
+			UpdateEngineSpool(throttle, timeSlice, destroyedLite);
+			return;
 		}
 
 		vector velocityWS = physics.GetVelocity();
@@ -515,6 +655,71 @@ class PFC_FlightModel : ScriptGameComponent
 	{
 	}
 
+	float GetCurrentFlapAngle()
+	{
+		return m_fCurrentFlapAngle;
+	}
+
+	float GetNwkAuxVisual()
+	{
+		return 0;
+	}
+
+	protected void ApplyProxyAuxVisual(float aux01)
+	{
+	}
+
+	protected void UpdateProxyControlVisuals(float timeSlice)
+	{
+		if (!m_SignalsMgr || !m_NwkMovement)
+			return;
+		if (!m_RplComponent || m_RplComponent.IsOwner() || Replication.IsServer())
+			return;
+
+		vector ctrl, cfg;
+		if (!m_NwkMovement.GetProxyControlState(ctrl, cfg))
+			return;
+
+		float maxDef = m_fMaxControlDeflectionDeg;
+		if (m_iSigElevator != -1) m_SignalsMgr.SetSignalValue(m_iSigElevator, -ctrl[0] * maxDef);
+		if (m_iSigRudder   != -1) m_SignalsMgr.SetSignalValue(m_iSigRudder,   -ctrl[2] * maxDef);
+		if (m_iSigAileron  != -1) m_SignalsMgr.SetSignalValue(m_iSigAileron,   ctrl[1] * maxDef);
+		m_fCurrentFlapAngle = cfg[0];
+		if (m_iSigFlap     != -1) m_SignalsMgr.SetSignalValue(m_iSigFlap,      cfg[0]);
+		ApplyProxyAuxVisual(cfg[1]);
+	}
+
+	protected void UpdateSteerVisSignal(float timeSlice)
+	{
+		if (!m_SignalsMgr || !m_FlightController)
+			return;
+
+		float steerScale = m_FlightController.GetGroundSteerScale();
+		if (steerScale == 0)
+			return;
+
+		float yaw = 0;
+		bool isProxy = m_RplComponent && !m_RplComponent.IsOwner() && !Replication.IsServer();
+		if (isProxy)
+		{
+			vector ctrl, cfg;
+			if (!m_NwkMovement || !m_NwkMovement.GetProxyControlState(ctrl, cfg))
+				return;
+			yaw = ctrl[2];
+		}
+		else
+		{
+			yaw = m_FlightController.GetYawInput();
+		}
+
+		if (m_iSigSteerVis == -1)
+			return;
+
+		float target = Math.Clamp(yaw * steerScale, -1, 1) * m_fSteerVisMaxDeg;
+		m_fSteerVisState += (target - m_fSteerVisState) * Math.Clamp(timeSlice / 0.12, 0, 1);
+		m_SignalsMgr.SetSignalValue(m_iSigSteerVis, m_fSteerVisState);
+	}
+
 	override void EOnFrame(IEntity owner, float timeSlice)
 	{
 		if (m_FlightController)
@@ -523,6 +728,8 @@ class PFC_FlightModel : ScriptGameComponent
 			m_FlightController.ApplyGroundSteering();
 		}
 
+		UpdateProxyControlVisuals(timeSlice);
+		UpdateSteerVisSignal(timeSlice);
 		UpdatePropellerVisuals(timeSlice);
 		DrawDebug(owner, timeSlice);
 

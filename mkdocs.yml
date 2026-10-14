@@ -71,4 +71,5 @@ nav:
   - Building Aircraft:
       - Prefab Setup: prefab-setup.md
       - Building a Variant: building-a-variant.md
+      - Request Pads & Servicing: request-pads.md
   - Reference: reference.md

@@ -22,7 +22,7 @@ ownership transfer and grants the input context (`CarContext`) that the flight c
 | Component | Responsibility |
 |---|---|
 | `PFC_FlightModel` | The flight model. Builds aero surfaces, applies per-surface lift/drag + thrust impulses, spools engine RPM, angular damping, wind/gusts, publishes instrument signals, debug draw. Runs on owner + server. |
-| `PFC_FlightController` | Reads the shared `Airplane_*` pilot input from `CarContext`, smooths it (slew-rate limited), exposes pitch/roll/yaw/throttle to the flight model, relays input to the server, and injects ground steering. |
+| `PFC_FlightController` | Reads the shared `PFC_*` pilot input from `CarContext`, smooths it (slew-rate limited), exposes pitch/roll/yaw/throttle to the flight model, relays input to the server, and injects ground steering. |
 | `PFC_FreeLookController` | Device-aware cockpit free look for the local pilot: mouse & keyboard always free-look, gamepad pans only while the Freelook modifier is held and keeps the released angle. Needs `ForcedFreeLook 1` on the pilot slot. |
 | `PFC_NwkMovementComponent` | Replicates owner→proxy movement state (transform + velocity) so remote viewers see smooth motion. |
 | `PFC_AeroSurface` | A single aerodynamic panel: given local airflow + air density, returns the lift+drag force. Pure math, no engine state. |

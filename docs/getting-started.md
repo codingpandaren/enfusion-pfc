@@ -50,7 +50,7 @@ Propeller flight core/
 ├── Configs/
 │   ├── ControlHints/AvailableActions.conf   # control hints (merges into the vanilla resource - see Input page)
 │   ├── ProcAnims/PFC_Propeller.pap|siga      # propeller spin procedural anim
-│   ├── System/chimeraInputCommon.conf        # shared Airplane_ input actions merged into CarContext
+│   ├── System/chimeraInputCommon.conf        # shared PFC_ input actions merged into CarContext
 │   └── System/keyBindingMenu.conf            # the "Airplane" controls tab
 ├── Models/                                   # Cessna172.xob, prop.xob
 ├── Prefabs/Vehicles/Cessna172.et             # reference airframe (inherits Wheeled_Base.et)

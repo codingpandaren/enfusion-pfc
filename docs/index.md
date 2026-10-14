@@ -25,7 +25,7 @@ The reference airframe shipped with the core is a **Cessna 172** built on the va
   rate, RPM, pitch/bank/heading, G-load, control-surface angles) for HUDs and cockpit instruments.
 - **MP / dedicated-server ready** - the owner client (or the server when unmanned) is authoritative; remote
   proxies receive replicated transform + velocity and locally drive their visuals.
-- **Shared "Airplane" controls** - defines the `Airplane_*` action set and the Airplane tab in the Controls
+- **Shared "Airplane" controls** - defines the `PFC_*` action set and the Airplane tab in the Controls
   menu, reused by every flight mod built on the core.
 - **Helicopter-style free look** - mouse always free-looks; gamepad pans with the Freelook modifier held and
   keeps the camera where it was released (see [Input & Controls](input-and-controls.md#free-look)).

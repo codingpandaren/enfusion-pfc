@@ -1,0 +1,125 @@
+GenericEntity : "{6E9190BC2713551D}Prefabs/Compositions/Slotted/BuildableComposition_Base.et" {
+ ID "5282DCB5DFC8538F"
+ components {
+  RigidBody "{5E96A067A67C5029}" {
+   Geometries {
+    PhysicsBoxGeometry UserAction {
+     Extents 25 0.5 25
+    }
+   }
+  }
+  SCR_CampaignBuildingCompositionComponent "{5E96A067C097D570}" {
+   m_fCustomObstructionValue 11
+   m_AudioSourceConfigurationSpawn SCR_AudioSourceConfiguration "{5E96A067C355978C}" {
+    m_sSoundEventName "SOUND_BUILD_VEHICLE_DEPOT"
+   }
+  }
+  ActionsManagerComponent "{5D66ED1096104FD8}" {
+   ActionContexts {
+    UserActionContext "{5D66ED108A2039E0}" {
+     Radius 20
+    }
+   }
+   additionalActions {
+    SCR_CampaignBuildingDisassemblyUserAction "{66F87AAA0DDFF5C3}" {
+     VisibilityRange 20
+    }
+   }
+  }
+  Hierarchy "{5DC704E48EB20F06}" {
+   Enabled 1
+  }
+ }
+ coords 0 0 0
+ {
+  GenericEntity : "{69A8A34000008701}Prefabs/Props/PFC_PlaneService_US.et" {
+   ID "69A8A34000008710"
+   coords 14 0 -9
+   angleY 135
+  }
+  GenericEntity : "{69A8A34000008001}Prefabs/Systems/PFC_PlaneSpawnerSlot.et" {
+   ID "69A8A34000008711"
+   components {
+    Hierarchy "{69A8A34000008712}" {
+     Enabled 1
+    }
+   }
+   coords 0 0.1 0
+  }
+  GenericEntity : "{7BDAD0F4A6195C01}PrefabsEditable/SupportStationSystems/E_SupportStationSystem_Repair_Helipad_BoundingBox.et" {
+   ID "69A8A34000008713"
+   coords 0 0 0
+  }
+  $grp GenericEntity : "{03740F1BD7C816A9}Prefabs/Props/Airport/RunwayLightPortable_01/RunwayLightPortable_01_yellow.et" {
+   {
+    ID "69A8A34000008714"
+    components {
+     Hierarchy "{69A8A34000008715}" {
+      Enabled 1
+     }
+    }
+    coords -9.5 0.001 -10.5
+   }
+   {
+    ID "69A8A34000008716"
+    components {
+     Hierarchy "{69A8A34000008717}" {
+      Enabled 1
+     }
+    }
+    coords 9.5 0.001 -10.5
+   }
+   {
+    ID "69A8A34000008718"
+    components {
+     Hierarchy "{69A8A34000008719}" {
+      Enabled 1
+     }
+    }
+    coords -9.5 0.001 10.5
+    angleY 180
+   }
+   {
+    ID "69A8A3400000871A"
+    components {
+     Hierarchy "{69A8A3400000871B}" {
+      Enabled 1
+     }
+    }
+    coords 9.5 0.001 10.5
+    angleY 180
+   }
+  }
+  GenericEntity : "{0F207D66090AB0E6}Prefabs/Structures/Signs/Military/Supplies/Sign_SupplyStorage_01_Vehicle_US.et" {
+   ID "69A8A3400000871C"
+   components {
+    Hierarchy "{69A8A3400000871D}" {
+     Enabled 1
+    }
+   }
+   coords 15.5 0 -7.2
+   angleY 135
+  }
+  GenericEntity : "{1693A2CCA4BFD922}Prefabs/Props/Military/Compositions/US/FuelService_US_Large.et" {
+   ID "69A8A34000008742"
+   components {
+    SCR_FuelSupportStationComponent "{5EA8A5EFA3C1923E}" {
+     m_fRange 12
+     m_bUseRangeBoundingBox 1
+     m_vOffset -5.3554 0 -13.8257
+    }
+    Hierarchy "{69A8A34000008743}" {
+     Enabled 1
+    }
+   }
+   coords 14.116 0 -4.474
+   angleY 90
+   {
+    GenericEntity {
+     ID "5E6A90B022FE573D"
+     coords -5.3554 0 -13.8257
+    }
+   }
+  }
+ }
+}

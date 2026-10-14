@@ -20,11 +20,14 @@ class PFC_FlightController : ScriptGameComponent
 	[Attribute("0.7", UIWidgets.EditBox, "Max pitch input magnitude (0..1). Caps elevator authority.")]
 	protected float m_fPitchInputScale;
 
-	[Attribute("-1.0", UIWidgets.EditBox, "Nose-wheel ground steering scale. The smoothed Airplane_Yaw (Q/E) input is written into the native CarSteering action so the wheel sim steers the nose wheel, freeing A/D to roll only. Sign matches rudder convention (Q=left, E=right); flip to invert; 0 disables (A/D steers as vanilla).")]
+	[Attribute("-1.0", UIWidgets.EditBox, "Nose-wheel ground steering scale. The smoothed PFC_Yaw (Q/E) input is written into the native CarSteering action so the wheel sim steers the nose wheel, freeing A/D to roll only. Sign matches rudder convention (Q=left, E=right); flip to invert; 0 disables (A/D steers as vanilla).")]
 	protected float m_fGroundSteerScale;
 
-	[Attribute("16", UIWidgets.EditBox, "Milliseconds between input RPCs to server.")]
+	[Attribute("33", UIWidgets.EditBox, "Milliseconds between input RPCs to server.")]
 	protected float m_fInputSendIntervalMs;
+
+	[Attribute("250", UIWidgets.EditBox, "Input heartbeat (ms): with hands still, input RPCs drop to this rate instead of streaming unchanged values.")]
+	protected float m_fInputHeartbeatMs;
 
 	[Attribute("0", UIWidgets.CheckBox, "Persistent pitch: W/S moves the virtual yoke and releasing HOLDS it there; opposite input returns it. Removes keyboard yoyo. Pitch slew-rate curves are bypassed in this mode. Applies to digital (key) input only - analog devices (gamepad/joystick/mouse axes) keep the normal spring-back behavior.")]
 	protected bool m_bPersistentPitch;
@@ -32,10 +35,10 @@ class PFC_FlightController : ScriptGameComponent
 	[Attribute("2.5", UIWidgets.EditBox, "Persistent pitch: seconds of held input for full yoke travel (center to full deflection).")]
 	protected float m_fPersistentPitchSeconds;
 
-	[Attribute("0.04", UIWidgets.EditBox, "Mouse aircraft control: pitch stick deflection per unit of Airplane_MousePitch. Used while the vanilla 'Mouse aircraft control' gameplay setting is on; mouse position becomes a persistent virtual stick, hold/tap Freelook (Alt) to look around. Negative inverts.")]
+	[Attribute("0.04", UIWidgets.EditBox, "Mouse aircraft control: pitch stick deflection per unit of PFC_MousePitch. Used while the vanilla 'Mouse aircraft control' gameplay setting is on; mouse position becomes a persistent virtual stick, hold/tap Freelook (Alt) to look around. Negative inverts.")]
 	protected float m_fMouseFlightPitchSens;
 
-	[Attribute("0.04", UIWidgets.EditBox, "Mouse aircraft control: roll stick deflection per unit of Airplane_MouseRoll. Negative inverts.")]
+	[Attribute("0.04", UIWidgets.EditBox, "Mouse aircraft control: roll stick deflection per unit of PFC_MouseRoll. Negative inverts.")]
 	protected float m_fMouseFlightRollSens;
 
 	[Attribute("2.5", UIWidgets.EditBox, "Mouse aircraft control: slew rate (units/sec) of the published input chasing the mouse stick, same for pitch and roll so the pilot hand moves uniformly. High-IAS pitch slew falloff still caps pitch on top.")]
@@ -56,6 +59,10 @@ class PFC_FlightController : ScriptGameComponent
 	protected float m_fThrottle;
 
 	protected float m_fLastInputSendMs = -1e9;
+	protected float m_fSentPitch = -9;
+	protected float m_fSentRoll = -9;
+	protected float m_fSentYaw = -9;
+	protected float m_fSentThrottle = -9;
 
 	protected bool m_bThrottleAxisEngaged;
 	protected float m_fThrottleAxisRef = -999;
@@ -68,6 +75,8 @@ class PFC_FlightController : ScriptGameComponent
 
 	protected float m_fMouseStickPitch;
 	protected float m_fMouseStickRoll;
+	protected float m_fKeySpringPitch;
+	protected float m_fKeySpringRoll;
 	protected float m_fMouseDbgPitch;
 	protected float m_fMouseDbgRoll;
 	protected bool m_bMouseFlightWasActive;
@@ -145,14 +154,11 @@ class PFC_FlightController : ScriptGameComponent
 
 		m_bLocalPilotActive = LocalIsPiloting();
 
-		float rollMaxDelta  = m_fControlRate * timeSlice;
-		float yawMaxDelta   = m_fYawControlRate * timeSlice;
-
 		if (!m_bLocalPilotActive || !m_InputMgr)
 		{
 			m_fPitchInput = MoveTowards(m_fPitchInput, 0, GetPitchSlewRate(m_fPitchInput, 0) * timeSlice);
-			m_fRollInput  = MoveTowards(m_fRollInput,  0, rollMaxDelta);
-			m_fYawInput   = MoveTowards(m_fYawInput,   0, yawMaxDelta);
+			m_fRollInput  = MoveTowards(m_fRollInput,  0, GetRollSlewRate(m_fRollInput, 0) * timeSlice);
+			m_fYawInput   = MoveTowards(m_fYawInput,   0, GetYawSlewRate(m_fYawInput, 0) * timeSlice);
 			m_bMouseFlightWasActive = false;
 		}
 		else
@@ -160,45 +166,66 @@ class PFC_FlightController : ScriptGameComponent
 			float pitch = 0;
 			float roll = 0;
 			float yaw = 0;
-			if (!PFC_PilotUtil.IsFlightInputSuppressed("Airplane_Pitch"))
-				pitch = m_InputMgr.GetActionValue("Airplane_Pitch");
-			if (!PFC_PilotUtil.IsFlightInputSuppressed("Airplane_Roll"))
-				roll = m_InputMgr.GetActionValue("Airplane_Roll");
-			if (!PFC_PilotUtil.IsFlightInputSuppressed("Airplane_Yaw"))
-				yaw = m_InputMgr.GetActionValue("Airplane_Yaw");
+			if (!PFC_PilotUtil.IsFlightInputSuppressed("PFC_Pitch"))
+				pitch = m_InputMgr.GetActionValue("PFC_Pitch");
+			if (!PFC_PilotUtil.IsFlightInputSuppressed("PFC_Roll"))
+				roll = m_InputMgr.GetActionValue("PFC_Roll");
+			if (!PFC_PilotUtil.IsFlightInputSuppressed("PFC_Yaw"))
+				yaw = m_InputMgr.GetActionValue("PFC_Yaw");
+
+			if (Math.AbsFloat(pitch) > 0.01)
+			{
+				// Fractional values can only come from an analog device — key filters yield exact
+				// 0/±1 — so partial stick deflection never reaches the persistent integrator even
+				// if the reported input type is wrong.
+				float mag = Math.AbsFloat(pitch);
+				bool fractional = (mag - Math.Floor(mag)) > 0.02 && (Math.Ceil(mag) - mag) > 0.02;
+				m_bPitchInputAnalog = fractional || m_InputMgr.GetActionInputType("PFC_Pitch") != EActionValueType.DIGITAL;
+			}
+
+			PFC_JoystickTuning tuning = PFC_JoystickTuning.GetInstance();
+			pitch = tuning.ApplyPitch(pitch);
+			roll = tuning.ApplyRoll(roll);
+			yaw = tuning.ApplyYaw(yaw);
 
 			bool mouseFlight = IsMouseFlightActive();
 			if (mouseFlight && !m_bMouseFlightWasActive)
 			{
 				m_fMouseStickPitch = m_fPitchInput;
 				m_fMouseStickRoll = m_fRollInput;
+				m_fKeySpringPitch = 0;
+				m_fKeySpringRoll = 0;
 			}
 			m_bMouseFlightWasActive = mouseFlight;
 
 			if (mouseFlight)
 			{
-				// keys nudge the same virtual stick the mouse holds (heli cyclic behavior)
-				float keyTravel = timeSlice / Math.Max(m_fPersistentPitchSeconds, 0.1);
-				m_fMouseStickPitch = Math.Clamp(m_fMouseStickPitch + Math.Clamp(pitch, -1, 1) * keyTravel * m_fPitchInputScale, -m_fPitchInputScale, m_fPitchInputScale);
-				m_fMouseStickRoll = Math.Clamp(m_fMouseStickRoll + Math.Clamp(roll, -1, 1) * m_fControlRate * timeSlice, -1, 1);
-				// slew toward the mouse stick so surfaces (and the pilot hand anim) move at a bounded,
-				// per-axis-uniform rate; the variant high-IAS pitch falloff still caps pitch on top
-				float mousePitchRate = Math.Min(m_fMouseStickSlewRate, GetPitchSlewRate(m_fPitchInput, m_fMouseStickPitch));
-				m_fPitchInput = MoveTowards(m_fPitchInput, m_fMouseStickPitch, mousePitchRate * timeSlice);
-				m_fRollInput = MoveTowards(m_fRollInput, m_fMouseStickRoll, m_fMouseStickSlewRate * timeSlice);
+				if (m_bPersistentPitch && !m_bPitchInputAnalog)
+				{
+					float keyTravel = timeSlice / Math.Max(m_fPersistentPitchSeconds, 0.1);
+					m_fMouseStickPitch = Math.Clamp(m_fMouseStickPitch + Math.Clamp(pitch, -1, 1) * keyTravel * m_fPitchInputScale, -m_fPitchInputScale, m_fPitchInputScale);
+					m_fKeySpringPitch = 0;
+				}
+				else
+				{
+					if (Math.AbsFloat(pitch) > 0.01)
+						m_fMouseStickPitch = 0;
+					float springPitchTarget = Math.Clamp(pitch, -1, 1) * m_fPitchInputScale;
+					m_fKeySpringPitch = MoveTowards(m_fKeySpringPitch, springPitchTarget, GetPitchSlewRate(m_fKeySpringPitch, springPitchTarget) * timeSlice);
+				}
+				if (Math.AbsFloat(roll) > 0.01)
+					m_fMouseStickRoll = 0;
+				float springRollTarget = Math.Clamp(roll, -1, 1);
+				m_fKeySpringRoll = MoveTowards(m_fKeySpringRoll, springRollTarget, GetRollSlewRate(m_fKeySpringRoll, springRollTarget) * timeSlice);
+
+				float stickPitchTarget = Math.Clamp(m_fMouseStickPitch + m_fKeySpringPitch, -m_fPitchInputScale, m_fPitchInputScale);
+				float stickRollTarget = Math.Clamp(m_fMouseStickRoll + m_fKeySpringRoll, -1, 1);
+				float mousePitchRate = Math.Min(m_fMouseStickSlewRate, GetPitchSlewRate(m_fPitchInput, stickPitchTarget));
+				m_fPitchInput = MoveTowards(m_fPitchInput, stickPitchTarget, mousePitchRate * timeSlice);
+				m_fRollInput = MoveTowards(m_fRollInput, stickRollTarget, m_fMouseStickSlewRate * timeSlice);
 			}
 			else
 			{
-				if (Math.AbsFloat(pitch) > 0.01)
-				{
-					// Fractional values can only come from an analog device — key filters yield exact
-					// 0/±1 — so partial stick deflection never reaches the persistent integrator even
-					// if the reported input type is wrong.
-					float mag = Math.AbsFloat(pitch);
-					bool fractional = (mag - Math.Floor(mag)) > 0.02 && (Math.Ceil(mag) - mag) > 0.02;
-					m_bPitchInputAnalog = fractional || m_InputMgr.GetActionInputType("Airplane_Pitch") != EActionValueType.DIGITAL;
-				}
-
 				if (m_bPersistentPitch && !m_bPitchInputAnalog)
 				{
 					float travel = timeSlice / Math.Max(m_fPersistentPitchSeconds, 0.1);
@@ -211,22 +238,24 @@ class PFC_FlightController : ScriptGameComponent
 					m_fPitchInput = MoveTowards(m_fPitchInput, pitchTarget, GetPitchSlewRate(m_fPitchInput, pitchTarget) * timeSlice);
 				}
 
-				m_fRollInput = MoveTowards(m_fRollInput, Math.Clamp(roll, -1, 1), rollMaxDelta);
+				float rollTarget = Math.Clamp(roll, -1, 1);
+				m_fRollInput = MoveTowards(m_fRollInput, rollTarget, GetRollSlewRate(m_fRollInput, rollTarget) * timeSlice);
 			}
 
-			m_fYawInput = MoveTowards(m_fYawInput, Math.Clamp(yaw, -1, 1), yawMaxDelta);
+			float yawTarget = Math.Clamp(yaw, -1, 1);
+			m_fYawInput = MoveTowards(m_fYawInput, yawTarget, GetYawSlewRate(m_fYawInput, yawTarget) * timeSlice);
 
-			bool axisSuppressed = PFC_PilotUtil.IsFlightInputSuppressed("Airplane_ThrottleAxis");
+			bool axisSuppressed = PFC_PilotUtil.IsFlightInputSuppressed("PFC_ThrottleAxis");
 
 			float thrAxis = 0;
 			float thrUp = 0;
 			float thrDown = 0;
 			if (!axisSuppressed)
-				thrAxis = m_InputMgr.GetActionValue("Airplane_ThrottleAxis");
-			if (!PFC_PilotUtil.IsFlightInputSuppressed("Airplane_ThrottleUp"))
-				thrUp = m_InputMgr.GetActionValue("Airplane_ThrottleUp");
-			if (!PFC_PilotUtil.IsFlightInputSuppressed("Airplane_ThrottleDown"))
-				thrDown = m_InputMgr.GetActionValue("Airplane_ThrottleDown");
+				thrAxis = m_InputMgr.GetActionValue("PFC_ThrottleAxis");
+			if (!PFC_PilotUtil.IsFlightInputSuppressed("PFC_ThrottleUp"))
+				thrUp = m_InputMgr.GetActionValue("PFC_ThrottleUp");
+			if (!PFC_PilotUtil.IsFlightInputSuppressed("PFC_ThrottleDown"))
+				thrDown = m_InputMgr.GetActionValue("PFC_ThrottleDown");
 
 			if (m_bThrottleAxisEngaged && (thrUp > 0.5 || thrDown > 0.5))
 			{
@@ -245,7 +274,7 @@ class PFC_FlightController : ScriptGameComponent
 			if (m_bThrottleAxisEngaged)
 			{
 				if (!axisSuppressed)
-					m_fThrottle = Math.Clamp(thrAxis, 0, 1);
+					m_fThrottle = tuning.ApplyThrottle01(0.5 - thrAxis * 0.5);
 			}
 			else
 			{
@@ -264,8 +293,19 @@ class PFC_FlightController : ScriptGameComponent
 			float now = System.GetTickCount();
 			if (now - m_fLastInputSendMs >= m_fInputSendIntervalMs)
 			{
-				Rpc(RpcSrv_ReceiveInputs, m_fPitchInput, m_fRollInput, m_fYawInput, m_fThrottle);
-				m_fLastInputSendMs = now;
+				bool changed = Math.AbsFloat(m_fPitchInput - m_fSentPitch) > 0.004
+					|| Math.AbsFloat(m_fRollInput - m_fSentRoll) > 0.004
+					|| Math.AbsFloat(m_fYawInput - m_fSentYaw) > 0.004
+					|| Math.AbsFloat(m_fThrottle - m_fSentThrottle) > 0.004;
+				if (changed || now - m_fLastInputSendMs >= m_fInputHeartbeatMs)
+				{
+					Rpc(RpcSrv_ReceiveInputs, m_fPitchInput, m_fRollInput, m_fYawInput, m_fThrottle);
+					m_fLastInputSendMs = now;
+					m_fSentPitch = m_fPitchInput;
+					m_fSentRoll = m_fRollInput;
+					m_fSentYaw = m_fYawInput;
+					m_fSentThrottle = m_fThrottle;
+				}
 			}
 		}
 	}
@@ -324,8 +364,8 @@ class PFC_FlightController : ScriptGameComponent
 			return;
 
 		// AnalogRelative actions report the per-frame mouse delta (ManualCameraRotateYaw pattern)
-		float deltaPitch = m_InputMgr.GetActionValue("Airplane_MousePitch");
-		float deltaRoll = m_InputMgr.GetActionValue("Airplane_MouseRoll");
+		float deltaPitch = m_InputMgr.GetActionValue("PFC_MousePitch");
+		float deltaRoll = m_InputMgr.GetActionValue("PFC_MouseRoll");
 		m_fMouseDbgPitch = deltaPitch;
 		m_fMouseDbgRoll = deltaRoll;
 
@@ -364,9 +404,9 @@ class PFC_FlightController : ScriptGameComponent
 	protected void DrawInputDebug(float pitch, float roll, float yaw, float thrAxis)
 	{
 		DbgUI.Begin("Flight Input");
-		DbgUI.Text(string.Format("pitch raw:  %1   type: %2", pitch.ToString(5, 3), InputTypeName(m_InputMgr.GetActionInputType("Airplane_Pitch"))));
+		DbgUI.Text(string.Format("pitch raw:  %1   type: %2", pitch.ToString(5, 3), InputTypeName(m_InputMgr.GetActionInputType("PFC_Pitch"))));
 		DbgUI.Text(string.Format("pitch out:  %1   latch: %2", m_fPitchInput.ToString(5, 3), AnalogLatchName()));
-		DbgUI.Text(string.Format("roll raw:   %1   type: %2", roll.ToString(5, 3), InputTypeName(m_InputMgr.GetActionInputType("Airplane_Roll"))));
+		DbgUI.Text(string.Format("roll raw:   %1   type: %2", roll.ToString(5, 3), InputTypeName(m_InputMgr.GetActionInputType("PFC_Roll"))));
 		DbgUI.Text(string.Format("roll out:   %1", m_fRollInput.ToString(5, 3)));
 		DbgUI.Text(string.Format("yaw raw:    %1", yaw.ToString(5, 3)));
 		DbgUI.Text(string.Format("yaw out:    %1", m_fYawInput.ToString(5, 3)));
@@ -440,6 +480,16 @@ class PFC_FlightController : ScriptGameComponent
 		return m_fPitchControlRate;
 	}
 
+	protected float GetRollSlewRate(float current, float target)
+	{
+		return m_fControlRate;
+	}
+
+	protected float GetYawSlewRate(float current, float target)
+	{
+		return m_fYawControlRate;
+	}
+
 	static float MoveTowards(float current, float target, float maxDelta)
 	{
 		float diff = target - current;
@@ -454,6 +504,7 @@ class PFC_FlightController : ScriptGameComponent
 	}
 
 	bool IsLocalPilotActive() { return m_bLocalPilotActive; }
+	float GetGroundSteerScale() { return m_fGroundSteerScale; }
 	float GetPitchInput() { return m_fPitchInput; }
 	float GetRollInput()  { return m_fRollInput;  }
 	float GetYawInput()   { return m_fYawInput;   }
