@@ -21,7 +21,7 @@ class PFC_PilotUtil
 		InputManager im = GetGame().GetInputManager();
 		if (!im || im.IsUsingMouseAndKeyboard())
 			return false;
-		if (!CharacterControllerComponent.GetGamepadControlAircraft())
+		if (!CharacterControllerComponent.GetGamepadControlVehicle())
 			return true;
 		return im.GetActionValue("Freelook") > 0.1;
 	}

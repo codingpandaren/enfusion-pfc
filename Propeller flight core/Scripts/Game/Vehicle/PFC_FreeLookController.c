@@ -83,7 +83,7 @@ class PFC_FreeLookController : ScriptGameComponent
 		if (im.IsUsingMouseAndKeyboard())
 			desired = !mouseFlying;
 		else
-			desired = !CharacterControllerComponent.GetGamepadControlAircraft();
+			desired = !CharacterControllerComponent.GetGamepadControlVehicle();
 
 		if (!m_bApplied || desired != m_bAppliedValue)
 		{
